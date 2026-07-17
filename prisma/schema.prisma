@@ -1,0 +1,43 @@
+// Prisma schema — 3M Agência de Marketing
+// Executar `npx prisma migrate dev --name init` após configurar DATABASE_URL.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ServiceInterest {
+  ESTRATEGIA
+  CRIATIVIDADE
+  TRAFEGO
+  MIDIAS_SOCIAIS
+  BRANDING
+  OUTRO
+}
+
+enum LeadStatus {
+  NOVO
+  EM_CONTATO
+  QUALIFICADO
+  GANHO
+  PERDIDO
+}
+
+model Lead {
+  id        String          @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  service   ServiceInterest
+  message   String
+  status    LeadStatus      @default(NOVO)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@index([email])
+  @@index([createdAt])
+}

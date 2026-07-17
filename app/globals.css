@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 207 60% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 207 60% 12%;
+
+    --primary: 194 78% 37%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 194 45% 95%;
+    --secondary-foreground: 207 60% 18%;
+
+    --accent: 28 91% 54%;
+    --accent-foreground: 0 0% 100%;
+
+    --muted: 210 25% 96%;
+    --muted-foreground: 215 16% 45%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 24% 90%;
+    --input: 214 24% 90%;
+    --ring: 194 78% 37%;
+
+    --radius: 0.9rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .container-padded {
+    @apply mx-auto w-full max-w-[1280px] px-6 lg:px-10;
+  }
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-accent-500;
+  }
+  .eyebrow::before {
+    content: "";
+    @apply h-[2px] w-6 bg-accent-500;
+  }
+  .bg-dot-grid {
+    background-image: radial-gradient(currentColor 1.5px, transparent 1.5px);
+    background-size: 16px 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
