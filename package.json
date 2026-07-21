@@ -2,7 +2,7 @@
   "name": "3m-agencia-marketing",
   "version": "1.0.0",
   "private": true,
-  "description": "Site institucional da 3M Agência de Marketing",
+  "description": "Site institucional da 3M Agência de Marketing — Next.js 15, React 18, shadcn/ui, Framer Motion, Zustand, Zod e Prisma.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,7 +11,7 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
-    "next": "15.1.11",
+    "next": "15.1.6",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "framer-motion": "^11.15.0",
