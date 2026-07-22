@@ -1,51 +1,51 @@
-"use client";
+"use client"
 
-import { useEffect, useRef, useState } from "react";
-import { motion, useInView } from "framer-motion";
-import { Smile, TrendingUp, Rocket, Trophy, type LucideIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react"
+import { motion, useInView } from "framer-motion"
+import { Smile, TrendingUp, Rocket, Trophy, type LucideIcon } from "lucide-react"
 
 interface Stat {
-  icon: LucideIcon;
-  value: number;
-  suffix: string;
-  label: string;
+  icon: LucideIcon
+  value: number
+  suffix: string
+  label: string
 }
 
 const STATS: Stat[] = [
-  { icon: Smile, value: 150, suffix: "+", label: "Clientes satisfeitos" },
+  { icon: Smile, value: 29, suffix: "+", label: "Clientes satisfeitos" },
   { icon: TrendingUp, value: 300, suffix: "%", label: "Média de crescimento" },
-  { icon: Rocket, value: 500, suffix: "+", label: "Projetos entregues" },
-  { icon: Trophy, value: 10, suffix: "+", label: "Anos de experiência" },
-];
+  { icon: Rocket, value: 79, suffix: "+", label: "Projetos entregues" },
+  { icon: Trophy, value: 3, suffix: "+", label: "Anos de experiência" },
+]
 
 function AnimatedNumber({ value, suffix }: { value: number; suffix: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true, amount: 0.6 });
-  const [display, setDisplay] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null)
+  const isInView = useInView(ref, { once: true, amount: 0.6 })
+  const [display, setDisplay] = useState(0)
 
   useEffect(() => {
-    if (!isInView) return;
+    if (!isInView) return
 
-    const duration = 1400;
-    const start = performance.now();
+    const duration = 1400
+    const start = performance.now()
 
     const frame = (now: number) => {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.round(eased * value));
-      if (progress < 1) requestAnimationFrame(frame);
-    };
+      const progress = Math.min((now - start) / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setDisplay(Math.round(eased * value))
+      if (progress < 1) requestAnimationFrame(frame)
+    }
 
-    const raf = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(raf);
-  }, [isInView, value]);
+    const raf = requestAnimationFrame(frame)
+    return () => cancelAnimationFrame(raf)
+  }, [isInView, value])
 
   return (
     <span ref={ref}>
       {display}
       {suffix}
     </span>
-  );
+  )
 }
 
 export function StatsBand() {
@@ -74,5 +74,5 @@ export function StatsBand() {
         ))}
       </div>
     </section>
-  );
+  )
 }

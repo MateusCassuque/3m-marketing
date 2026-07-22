@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 
@@ -10,7 +11,7 @@ export function CtaSection() {
   const openContact = useUIStore((state) => state.openContact);
 
   return (
-    <section id="contato" className="relative overflow-hidden bg-white py-20 lg:py-24">
+    <section className="relative overflow-hidden bg-white py-20 lg:py-24">
       <div
         className="pointer-events-none absolute bottom-6 left-6 hidden h-28 w-28 text-primary-200 lg:block"
         aria-hidden="true"
@@ -51,6 +52,12 @@ export function CtaSection() {
             Vamos conversar
             <ArrowRight className="h-4 w-4" />
           </Button>
+          <Link
+            href="/contato"
+            className="mt-3 block text-center text-sm font-semibold text-primary-600 hover:underline lg:text-left"
+          >
+            Prefere um formulário completo? Acesse a página de contato →
+          </Link>
         </motion.div>
       </div>
     </section>

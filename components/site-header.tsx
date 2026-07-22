@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight, Menu } from "lucide-react";
 
@@ -11,24 +13,18 @@ import { useUIStore } from "@/store/use-ui-store";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
-  { label: "Início", href: "#inicio" },
-  { label: "Sobre", href: "#sobre" },
-  { label: "Serviços", href: "#servicos" },
-  { label: "Portfólio", href: "#portfolio" },
-  { label: "Blog", href: "#blog" },
-  { label: "Contato", href: "#contato" },
+  { label: "Início", href: "/" },
+  { label: "Sobre", href: "/sobre" },
+  { label: "Serviços", href: "/servicos" },
+  { label: "Portfólio", href: "/portfolio" },
+  { label: "Blog", href: "/blog" },
+  { label: "Contato", href: "/contato" },
 ];
 
 export function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
-  const {
-    isMobileNavOpen,
-    closeMobileNav,
-    toggleMobileNav,
-    openContact,
-    activeSection,
-    setActiveSection,
-  } = useUIStore();
+  const pathname = usePathname();
+  const { isMobileNavOpen, closeMobileNav, toggleMobileNav, openContact } = useUIStore();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -37,10 +33,8 @@ export function SiteHeader() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const handleNavClick = (href: string) => {
-    setActiveSection(href.replace("#", ""));
-    closeMobileNav();
-  };
+  const isLinkActive = (href: string) =>
+    href === "/" ? pathname === "/" : pathname === href || pathname?.startsWith(`${href}/`);
 
   return (
     <motion.header
@@ -49,24 +43,21 @@ export function SiteHeader() {
       transition={{ duration: 0.5, ease: "easeOut" }}
       className={cn(
         "sticky top-0 z-40 w-full transition-all duration-300",
-        scrolled
-          ? "bg-white/90 shadow-soft backdrop-blur-md"
-          : "bg-white/70 backdrop-blur-sm",
+        scrolled ? "bg-white/90 shadow-soft backdrop-blur-md" : "bg-white/70 backdrop-blur-sm",
       )}
     >
       <div className="container-padded flex h-20 items-center justify-between">
-        <a href="#inicio" onClick={() => handleNavClick("#inicio")} aria-label="3M — página inicial">
+        <Link href="/" aria-label="3M — página inicial" onClick={closeMobileNav}>
           <Logo />
-        </a>
+        </Link>
 
         <nav className="hidden items-center gap-8 lg:flex" aria-label="Navegação principal">
           {NAV_LINKS.map((link) => {
-            const isActive = activeSection === link.href.replace("#", "");
+            const isActive = isLinkActive(link.href);
             return (
-              <a
+              <Link
                 key={link.href}
                 href={link.href}
-                onClick={() => handleNavClick(link.href)}
                 className={cn(
                   "relative pb-1 text-sm font-bold uppercase tracking-wide text-navy-500 transition-colors hover:text-primary-600",
                   isActive && "text-primary-600",
@@ -79,7 +70,7 @@ export function SiteHeader() {
                     className="absolute -bottom-0.5 left-0 h-0.5 w-full bg-primary-500"
                   />
                 )}
-              </a>
+              </Link>
             );
           })}
         </nav>
@@ -106,14 +97,17 @@ export function SiteHeader() {
           <Logo />
           <nav className="mt-4 flex flex-col gap-1" aria-label="Navegação móvel">
             {NAV_LINKS.map((link) => (
-              <a
+              <Link
                 key={link.href}
                 href={link.href}
-                onClick={() => handleNavClick(link.href)}
-                className="rounded-lg px-3 py-3 text-base font-bold text-navy-700 transition-colors hover:bg-primary-50 hover:text-primary-600"
+                onClick={closeMobileNav}
+                className={cn(
+                  "rounded-lg px-3 py-3 text-base font-bold text-navy-700 transition-colors hover:bg-primary-50 hover:text-primary-600",
+                  isLinkActive(link.href) && "bg-primary-50 text-primary-600",
+                )}
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
           </nav>
           <Button variant="accent" className="mt-auto w-full" onClick={openContact}>
