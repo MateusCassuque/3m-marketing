@@ -19,15 +19,17 @@ export default async function middleware(request: NextRequest) {
         // 📂 rotas públicas
         const publicPaths = [
             '/',
-            '/store/products',
             '/entrar',
-            '/entrar',
+            '/sobre',
             '/cadastrar',
             '/terms-and-privacy',
-            '/confirmacao',
+            '/servicos',
             '/placeholder.png',
             '/privacidade',
-            '/termos'
+            '/termos',
+            '/blog',
+            '/contato',
+            '/portifolio'
         ]
 
 
