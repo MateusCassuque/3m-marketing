@@ -1,0 +1,11 @@
+/* APP */
+name:3M-Agencia
+version: 1.0.1
+
+/* TEAM */
+Developer: Mateus Cassuque
+Website: https://mateuscassuque.vercel.app
+From: Angola
+
+/* THANKS */
+Build withe Next.js, Tailwind, Shadcn

@@ -46,7 +46,20 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="pt-BR" className={`${sora.variable} ${inter.variable}`}>
+    <html lang="pt-Ao" className={`${sora.variable} ${inter.variable}`}>
+      <head>
+        {/* <link rel="icon" href={'/placeholder.png'} /> */}
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#1a498f" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+        <meta name="author" content="Mateus Cassuque" />
+        <meta name="designer" content="Mateus Cassuque" />
+        <meta name="copyright" content="© 2025 Mateus Cassuque" />
+
+      </head>
       <body>
         <SiteHeader />
         <main>{children}</main>
