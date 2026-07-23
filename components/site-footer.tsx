@@ -1,17 +1,22 @@
-import { Instagram, Linkedin, Mail, MapPin, Phone } from "lucide-react";
+import Link from "next/link"
+import { Instagram, Linkedin, Mail, MapPin, Phone } from "lucide-react"
 
-import { Logo } from "@/components/logo";
+import { Logo } from "@/components/logo"
 
-const COLUMNS = [
-  {
-    title: "Serviços",
-    links: ["Estratégia", "Criatividade", "Gestão de Tráfego", "Mídias Sociais", "Branding"],
-  },
-  {
-    title: "Empresa",
-    links: ["Sobre nós", "Portfólio", "Blog", "Carreiras"],
-  },
-];
+const SERVICE_LINKS = [
+  { label: "Estratégia", href: "/servicos#estrategia" },
+  { label: "Criatividade", href: "/servicos#criatividade" },
+  { label: "Gestão de Tráfego", href: "/servicos#trafego" },
+  { label: "Mídias Sociais", href: "/servicos#midias-sociais" },
+  { label: "Branding", href: "/servicos#branding" },
+]
+
+const COMPANY_LINKS = [
+  { label: "Sobre nós", href: "/sobre" },
+  { label: "Portfólio", href: "/portfolio" },
+  { label: "Blog", href: "/blog" },
+  { label: "Contato", href: "/contato" },
+]
 
 export function SiteFooter() {
   return (
@@ -41,22 +46,35 @@ export function SiteFooter() {
           </div>
         </div>
 
-        {COLUMNS.map((col) => (
-          <div key={col.title}>
-            <h4 className="font-display text-sm font-bold uppercase tracking-wide text-white">
-              {col.title}
-            </h4>
-            <ul className="mt-4 space-y-2.5">
-              {col.links.map((link) => (
-                <li key={link}>
-                  <a href="#" className="text-sm text-white/70 transition-colors hover:text-white">
-                    {link}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+        <div>
+          <h4 className="font-display text-sm font-bold uppercase tracking-wide text-white">
+            Serviços
+          </h4>
+          <ul className="mt-4 space-y-2.5">
+            {SERVICE_LINKS.map((link) => (
+              <li key={link.label}>
+                <Link href={link.href} className="text-sm text-white/70 transition-colors hover:text-white">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <h4 className="font-display text-sm font-bold uppercase tracking-wide text-white">
+            Empresa
+          </h4>
+          <ul className="mt-4 space-y-2.5">
+            {COMPANY_LINKS.map((link) => (
+              <li key={link.label}>
+                <Link href={link.href} className="text-sm text-white/70 transition-colors hover:text-white">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
 
         <div>
           <h4 className="font-display text-sm font-bold uppercase tracking-wide text-white">
@@ -65,25 +83,28 @@ export function SiteFooter() {
           <ul className="mt-4 space-y-3 text-sm text-white/70">
             <li className="flex items-center gap-2.5">
               <Mail className="h-4 w-4 shrink-0 text-primary-300" />
-              contato@3magencia.com.br
+              geral@3magencia.site
             </li>
             <li className="flex items-center gap-2.5">
               <Phone className="h-4 w-4 shrink-0 text-primary-300" />
-              (11) 4000-0000
+              (+244) 953 951 694 / 935 044 500
             </li>
-            <li className="flex items-center gap-2.5">
-              <MapPin className="h-4 w-4 shrink-0 text-primary-300" />
-              São Paulo, SP
+            <li className="flex items-start gap-2.5">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary-300" />
+              Sambizanga, Luanda, Angola
             </li>
           </ul>
         </div>
       </div>
 
       <div className="border-t border-white/10 py-6">
-        <p className="container-padded text-center text-xs text-white/50">
-          © {new Date().getFullYear()} 3M Agência de Marketing. Todos os direitos reservados.
-        </p>
+        <div className="container-padded flex flex-col items-center justify-center gap-2 text-xs text-white/50 sm:flex-row sm:justify-between">
+          <p>© {new Date().getFullYear()} 3M Agência de Marketing. Todos os direitos reservados.</p>
+          <Link href="/dashboard" className="transition-colors hover:text-white/80">
+            Painel interno
+          </Link>
+        </div>
       </div>
     </footer>
-  );
+  )
 }

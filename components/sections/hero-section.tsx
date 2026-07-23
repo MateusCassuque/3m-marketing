@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, Play, Target, TrendingUp } from "lucide-react";
 
@@ -65,10 +66,10 @@ export function HeroSection() {
             className="mt-9 flex flex-col gap-4 sm:flex-row sm:items-center"
           >
             <Button variant="primary" size="lg" asChild>
-              <a href="#servicos">
+              <Link href="/servicos">
                 Nossos serviços
                 <ArrowRight className="h-4 w-4" />
-              </a>
+              </Link>
             </Button>
             <Button variant="outline" size="lg" onClick={openContact}>
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-500 text-white">
