@@ -29,7 +29,7 @@ export default async function middleware(request: NextRequest) {
             '/termos',
             '/blog',
             '/contato',
-            '/portifolio'
+            '/portfolio'
         ]
 
 
