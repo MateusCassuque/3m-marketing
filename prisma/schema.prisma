@@ -1,5 +1,5 @@
 // Prisma schema — 3M Agência de Marketing
-// Executar `npx prisma migrate dev --name init` após configurar DATABASE_URL.
+// Executar `npm run pd` (migrate dev) após configurar DATABASE_URL, depois `npm run seed`.
 
 generator client {
   provider = "prisma-client-js"
@@ -9,6 +9,8 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// ---------- Site institucional (leads do formulário /contato) ----------
 
 enum ServiceInterest {
   ESTRATEGIA
@@ -40,4 +42,110 @@ model Lead {
 
   @@index([email])
   @@index([createdAt])
+}
+
+// ---------- Autenticação do painel administrativo ----------
+
+enum Role {
+  ADMIN
+  EDITOR
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(ADMIN)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ---------- CRM: clientes, pedidos/projetos e faturas ----------
+
+model Client {
+  id        String    @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  company   String?
+  taxId     String?
+  address   String?
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  projects  Project[]
+
+  @@index([email])
+  @@index([name])
+}
+
+enum ProjectStatus {
+  BACKLOG
+  EM_ANDAMENTO
+  EM_REVISAO
+  CONCLUIDO
+  CANCELADO
+}
+
+enum Priority {
+  BAIXA
+  MEDIA
+  ALTA
+  URGENTE
+}
+
+model Project {
+  id          String          @id @default(cuid())
+  title       String
+  description String?
+  service     ServiceInterest @default(OUTRO)
+  status      ProjectStatus   @default(BACKLOG)
+  priority    Priority        @default(MEDIA)
+  value       Decimal         @db.Decimal(10, 2)
+  startDate   DateTime?
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  invoices Invoice[]
+
+  @@index([clientId])
+  @@index([status])
+}
+
+enum InvoiceStatus {
+  PENDENTE
+  PAGA
+  VENCIDA
+  CANCELADA
+}
+
+// Faturas ficam presas a um Pedido (Project); o cliente é sempre acessível
+// via invoice.project.client — uma única fonte de verdade para os números
+// que alimentam a página /admin/financeiro (nada é duplicado/"sincronizado"
+// manualmente, é a mesma tabela consultada de formas diferentes).
+model Invoice {
+  id            String        @id @default(cuid())
+  number        String        @unique
+  amount        Decimal       @db.Decimal(10, 2)
+  status        InvoiceStatus @default(PENDENTE)
+  issueDate     DateTime      @default(now())
+  dueDate       DateTime
+  paidAt        DateTime?
+  paymentMethod String?
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([status])
+  @@index([dueDate])
 }

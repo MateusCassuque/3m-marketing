@@ -33,9 +33,6 @@ export function SiteHeader() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const isLinkActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname === href || pathname?.startsWith(`${href}/`);
-
   return (
     <motion.header
       initial={{ y: -24, opacity: 0 }}
@@ -43,17 +40,19 @@ export function SiteHeader() {
       transition={{ duration: 0.5, ease: "easeOut" }}
       className={cn(
         "sticky top-0 z-40 w-full transition-all duration-300",
-        scrolled ? "bg-white/90 shadow-soft backdrop-blur-md" : "bg-white/70 backdrop-blur-sm",
+        scrolled
+          ? "bg-white/90 shadow-soft backdrop-blur-md"
+          : "bg-white/70 backdrop-blur-sm",
       )}
     >
       <div className="container-padded flex h-20 items-center justify-between">
-        <Link href="/" aria-label="3M — página inicial" onClick={closeMobileNav}>
+        <Link href="/" aria-label="3M — página inicial">
           <Logo />
         </Link>
 
         <nav className="hidden items-center gap-8 lg:flex" aria-label="Navegação principal">
           {NAV_LINKS.map((link) => {
-            const isActive = isLinkActive(link.href);
+            const isActive = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
             return (
               <Link
                 key={link.href}
@@ -101,10 +100,7 @@ export function SiteHeader() {
                 key={link.href}
                 href={link.href}
                 onClick={closeMobileNav}
-                className={cn(
-                  "rounded-lg px-3 py-3 text-base font-bold text-navy-700 transition-colors hover:bg-primary-50 hover:text-primary-600",
-                  isLinkActive(link.href) && "bg-primary-50 text-primary-600",
-                )}
+                className="rounded-lg px-3 py-3 text-base font-bold text-navy-700 transition-colors hover:bg-primary-50 hover:text-primary-600"
               >
                 {link.label}
               </Link>

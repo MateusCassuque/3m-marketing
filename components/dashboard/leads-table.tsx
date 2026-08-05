@@ -32,9 +32,7 @@ export function LeadsTable({ leads }: { leads: Lead[] }) {
               <td className="px-5 py-3.5 text-muted-foreground">{lead.email}</td>
               <td className="px-5 py-3.5 text-navy-600">{SERVICE_LABELS[lead.service]}</td>
               <td className="px-5 py-3.5">
-                <Badge variant={STATUS_BADGE_VARIANT[lead.status]}>
-                  {STATUS_LABELS[lead.status]}
-                </Badge>
+                <Badge variant={STATUS_BADGE_VARIANT[lead.status]}>{STATUS_LABELS[lead.status]}</Badge>
               </td>
               <td className="px-5 py-3.5 text-muted-foreground">
                 {new Date(lead.createdAt).toLocaleDateString("pt-BR", {

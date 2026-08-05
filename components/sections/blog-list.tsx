@@ -4,8 +4,8 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, Calendar, Clock } from "lucide-react";
 
-import type { BlogPost } from "@/app/blog/posts-data";
-import { formatPostDate } from "@/app/blog/posts-data";
+import type { BlogPost } from "@/app/(markting)/blog/posts-data";
+import { formatPostDate } from "@/app/(markting)/blog/posts-data";
 
 export function BlogList({ posts }: { posts: BlogPost[] }) {
   const [featured, ...rest] = posts;

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { PageHero } from "@/components/page-hero";
 import { BlogList } from "@/components/sections/blog-list";
 import { CtaSection } from "@/components/sections/cta-section";
-import { BLOG_POSTS } from "@/app/blog/posts-data";
+import { BLOG_POSTS } from "@/app/(markting)/blog/posts-data";
 
 export const metadata: Metadata = {
   title: "Blog | 3M Agência de Marketing",

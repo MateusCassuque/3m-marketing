@@ -5,10 +5,6 @@ interface LogoProps {
   variant?: "dark" | "light";
 }
 
-/**
- * Marca "3M" — replica o lettering em bloco do briefing: "3" e "M" em
- * gradiente azul-petróleo → navy, com um traço laranja de assinatura.
- */
 export function Logo({ className, variant = "dark" }: LogoProps) {
   return (
     <div className={cn("flex items-center gap-0.5 select-none", className)}>

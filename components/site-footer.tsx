@@ -1,7 +1,7 @@
-import Link from "next/link"
-import { Instagram, Linkedin, Mail, MapPin, Phone } from "lucide-react"
+import Link from "next/link";
+import { Instagram, Linkedin, Mail, MapPin, Phone } from "lucide-react";
 
-import { Logo } from "@/components/logo"
+import { Logo } from "@/components/logo";
 
 const SERVICE_LINKS = [
   { label: "Estratégia", href: "/servicos#estrategia" },
@@ -16,7 +16,7 @@ const COMPANY_LINKS = [
   { label: "Portfólio", href: "/portfolio" },
   { label: "Blog", href: "/blog" },
   { label: "Contato", href: "/contato" },
-]
+];
 
 export function SiteFooter() {
   return (
@@ -100,11 +100,11 @@ export function SiteFooter() {
       <div className="border-t border-white/10 py-6">
         <div className="container-padded flex flex-col items-center justify-center gap-2 text-xs text-white/50 sm:flex-row sm:justify-between">
           <p>© {new Date().getFullYear()} 3M Agência de Marketing. Todos os direitos reservados.</p>
-          <Link href="/dashboard" className="transition-colors hover:text-white/80">
+          <Link href="/admin" className="transition-colors hover:text-white/80">
             Painel interno
           </Link>
         </div>
       </div>
     </footer>
-  )
+  );
 }

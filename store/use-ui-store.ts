@@ -1,15 +1,15 @@
-import { create } from "zustand";
+import { create } from "zustand"
 
 interface UIState {
-  isMobileNavOpen: boolean;
-  isContactOpen: boolean;
-  activeSection: string;
-  openMobileNav: () => void;
-  closeMobileNav: () => void;
-  toggleMobileNav: () => void;
-  openContact: () => void;
-  closeContact: () => void;
-  setActiveSection: (section: string) => void;
+  isMobileNavOpen: boolean
+  isContactOpen: boolean
+  activeSection: string
+  openMobileNav: () => void
+  closeMobileNav: () => void
+  toggleMobileNav: () => void
+  openContact: () => void
+  closeContact: () => void
+  setActiveSection: (section: string) => void
 }
 
 /**
@@ -29,4 +29,4 @@ export const useUIStore = create<UIState>((set) => ({
   openContact: () => set({ isContactOpen: true, isMobileNavOpen: false }),
   closeContact: () => set({ isContactOpen: false }),
   setActiveSection: (section) => set({ activeSection: section }),
-}));
+}))

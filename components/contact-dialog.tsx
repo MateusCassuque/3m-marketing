@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   Dialog,
@@ -6,13 +6,13 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog"
-import { ContactForm } from "@/components/contact-form"
-import { useUIStore } from "@/store/use-ui-store"
+} from "@/components/ui/dialog";
+import { ContactForm } from "@/components/contact-form";
+import { useUIStore } from "@/store/use-ui-store";
 
 export function ContactDialog() {
-  const isContactOpen = useUIStore((state) => state.isContactOpen)
-  const closeContact = useUIStore((state) => state.closeContact)
+  const isContactOpen = useUIStore((state) => state.isContactOpen);
+  const closeContact = useUIStore((state) => state.closeContact);
 
   return (
     <Dialog open={isContactOpen} onOpenChange={(open) => !open && closeContact()}>
@@ -23,8 +23,8 @@ export function ContactDialog() {
             Conte um pouco sobre seu projeto e retornamos com uma proposta.
           </DialogDescription>
         </DialogHeader>
-        <ContactForm className="mt-5" />
+        <ContactForm className="mt-2" onSuccess={() => {}} />
       </DialogContent>
     </Dialog>
-  )
+  );
 }

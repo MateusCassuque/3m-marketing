@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Calendar, Clock } from "lucide-react";
 import { PageHero } from "@/components/page-hero";
 import { CtaSection } from "@/components/sections/cta-section";
-import { BLOG_POSTS, formatPostDate, getPostBySlug } from "@/app/blog/posts-data";
+import { BLOG_POSTS, formatPostDate, getPostBySlug } from "@/app/(markting)/blog/posts-data";
 
 // 1. Atualizado para Promise conforme exigido pelo Next.js 15
 interface BlogPostPageProps {

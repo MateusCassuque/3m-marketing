@@ -61,10 +61,7 @@ export default function RootLayout({
 
       </head>
       <body>
-        <SiteHeader />
         <main>{children}</main>
-        <SiteFooter />
-        <ContactDialog />
       </body>
     </html>
   )
