@@ -1,11 +1,15 @@
-import bcrypt from "bcryptjs";
+import { createHash } from 'crypto'
+import { text } from 'stream/consumers'
 
-const SALT_ROUNDS = 12;
 
-export async function hashPassword(plain: string) {
-  return bcrypt.hash(plain, SALT_ROUNDS);
+export function hashPassword(input: string): string {
+  const hash = createHash('sha1')
+  hash.update(input)
+  return hash.digest('hex')
 }
 
+
 export async function verifyPassword(plain: string, hash: string) {
-  return bcrypt.compare(plain, hash);
+  const passe = hashPassword(plain)
+  return passe === hash
 }
