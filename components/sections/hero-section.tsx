@@ -117,6 +117,7 @@ export function HeroSection() {
               </div>
             </div>
           </div>
+          <div className="absolute inset-0 rounded-[2.5rem] opacity-95 bg-[url('/images/modeloEmoje.png')] bg-no-repeat bg-cover" />
 
           {/* Orange growth arrow */}
           <svg
@@ -152,7 +153,7 @@ export function HeroSection() {
           <motion.div
             animate={{ y: [0, -8, 0] }}
             transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
-            className="absolute -bottom-6 -right-4 z-20 w-52 rounded-2xl bg-white p-4 shadow-card sm:-right-8 sm:w-56"
+            className="absolute sm:-bottom-6 -bottom-28 -right-4 z-20 w-52 rounded-2xl bg-white p-4 shadow-card sm:-right-8 sm:w-56"
           >
             <p className="text-xs font-medium leading-snug text-muted-foreground">
               Resultados que <span className="font-bold text-navy-700">geram crescimento</span>
