@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Eye, Pencil, Plus, Search, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import {
 import { deleteInvoice } from "@/app/admin/(protected)/faturas/actions";
 import { INVOICE_STATUS_LABELS, INVOICE_STATUS_BADGE } from "@/lib/invoice-labels";
 import { formatCurrency } from "@/lib/utils";
+import { InvoiceViewDialog } from "./invoice-view-dialog";
 
 export type InvoiceRow = InvoiceFormData & {
   project: { title: string; client: { name: string } };
@@ -35,6 +36,8 @@ export function InvoicesTable({
   const [query, setQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<InvoiceRow | null>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [viewingInvoice, setViewingInvoice] = useState<InvoiceRow | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const filtered = useMemo(() => {
@@ -56,6 +59,11 @@ export function InvoicesTable({
   const handleEdit = (invoice: InvoiceRow) => {
     setEditingInvoice(invoice);
     setDialogOpen(true);
+  };
+
+  const handleView = (invoice: InvoiceRow) => {
+    setViewingInvoice(invoice);
+    setViewDialogOpen(true);
   };
 
   const handleDelete = (invoice: InvoiceRow) => {
@@ -127,6 +135,14 @@ export function InvoicesTable({
                     <div className="flex justify-end gap-1.5">
                       <button
                         type="button"
+                        onClick={() => handleView(invoice)}
+                        className="rounded-lg p-2 text-navy-500 transition-colors hover:bg-navy-50 hover:text-navy-700"
+                        aria-label={`Visualizar fatura ${invoice.number}`}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => handleEdit(invoice)}
                         className="rounded-lg p-2 text-navy-500 transition-colors hover:bg-primary-50 hover:text-primary-600"
                         aria-label={`Editar fatura ${invoice.number}`}
@@ -156,6 +172,12 @@ export function InvoicesTable({
         onOpenChange={setDialogOpen}
         invoice={editingInvoice}
         projects={projects}
+      />
+
+      <InvoiceViewDialog
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+        invoice={viewingInvoice}
       />
     </div>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { formatCurrency } from "@/lib/utils";
 import {
   Bar,
   BarChart,
@@ -24,7 +25,6 @@ interface StatusDatum {
   color: string;
 }
 
-const currencyFormatter = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
 export function MonthlyRevenueChart({ data }: { data: MonthlyDatum[] }) {
   if (data.every((d) => d.total === 0)) {
@@ -53,7 +53,7 @@ export function MonthlyRevenueChart({ data }: { data: MonthlyDatum[] }) {
         />
         <Tooltip
           cursor={{ fill: "rgba(21, 131, 166, 0.06)" }}
-          formatter={(value: number) => currencyFormatter.format(value)}
+          formatter={(value: number) => formatCurrency(value)}
           contentStyle={{ borderRadius: 12, border: "1px solid #E2E8F0", fontSize: 12 }}
         />
         <Bar dataKey="total" fill="#1583A6" radius={[6, 6, 0, 0]} maxBarSize={40} />
@@ -89,7 +89,7 @@ export function InvoiceStatusChart({ data }: { data: StatusDatum[] }) {
           ))}
         </Pie>
         <Tooltip
-          formatter={(value: number, name: string) => [currencyFormatter.format(value), name]}
+          formatter={(value: number, name: string) => [formatCurrency(value), name]}
           contentStyle={{ borderRadius: 12, border: "1px solid #E2E8F0", fontSize: 12 }}
         />
       </PieChart>
