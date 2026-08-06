@@ -13,12 +13,12 @@ import {
 } from "@/components/admin/faturas/invoice-form-dialog";
 import { deleteInvoice } from "@/app/admin/(protected)/faturas/actions";
 import { INVOICE_STATUS_LABELS, INVOICE_STATUS_BADGE } from "@/lib/invoice-labels";
+import { formatCurrency } from "@/lib/utils";
 
 export type InvoiceRow = InvoiceFormData & {
   project: { title: string; client: { name: string } };
 };
 
-const currencyFormatter = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
 
 function isOverdue(invoice: InvoiceRow) {
@@ -113,7 +113,7 @@ export function InvoicesTable({
                     <div className="text-xs text-muted-foreground">{invoice.project.client.name}</div>
                   </td>
                   <td className="px-5 py-3.5 font-semibold text-navy-700">
-                    {currencyFormatter.format(invoice.amount)}
+                    {formatCurrency(invoice.amount)}
                   </td>
                   <td className="px-5 py-3.5">
                     <Badge variant={isOverdue(invoice) ? "destructive" : INVOICE_STATUS_BADGE[invoice.status]}>

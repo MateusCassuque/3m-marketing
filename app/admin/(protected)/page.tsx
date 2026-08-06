@@ -4,6 +4,7 @@ import { ArrowRight, Briefcase, Inbox, Receipt, Users, Wallet } from "lucide-rea
 
 import { prisma } from "@/lib/prisma";
 import { StatCard } from "@/components/dashboard/stat-card";
+import { formatCurrency } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Visão geral | Painel 3M",
@@ -60,14 +61,14 @@ export default async function AdminOverviewPage() {
       </div>
 
       {data.connected && (
-        <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="mb-8 grid md:grid-cols-2 gap-4 lg:grid-cols-4">
           <StatCard icon={Inbox} label="Leads novos" value={data.leadsNovos} accent="teal" />
           <StatCard icon={Users} label="Clientes" value={data.clientesCount} accent="navy" />
           <StatCard icon={Briefcase} label="Pedidos ativos" value={data.pedidosAtivos} accent="accent" />
           <StatCard
             icon={Wallet}
             label="A receber (pendente)"
-            value={currencyFormatter.format(data.pendenteEmAberto)}
+            value={formatCurrency(data.pendenteEmAberto)}
             accent="success"
           />
         </div>

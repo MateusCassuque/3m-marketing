@@ -20,7 +20,7 @@ export default async function ProtectedAdminLayout({
         userName={session.user.name ?? "Administrador"}
         userEmail={session.user.email ?? ""}
       />
-      <div className="flex-1 overflow-x-hidden">{children}</div>
+      <div className="flex-1 overflow-x-hidden mt-10">{children}</div>
     </div>
   );
 }

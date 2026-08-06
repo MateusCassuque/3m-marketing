@@ -14,6 +14,7 @@ import {
 import { deleteProject } from "@/app/admin/(protected)/pedidos/actions";
 import { PROJECT_STATUS_LABELS, PROJECT_STATUS_BADGE, PRIORITY_LABELS, PRIORITY_BADGE } from "@/lib/project-labels";
 import { SERVICE_LABELS } from "@/lib/lead-labels";
+import { formatCurrency } from "@/lib/utils";
 
 export type ProjectRow = ProjectFormData & { client: { name: string } };
 
@@ -122,7 +123,7 @@ export function ProjectsTable({
                     </Badge>
                   </td>
                   <td className="px-5 py-3.5 font-semibold text-navy-700">
-                    {currencyFormatter.format(project.value)}
+                    {formatCurrency(project.value)}
                   </td>
                   <td className="px-5 py-3.5">
                     <div className="flex justify-end gap-1.5">

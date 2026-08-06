@@ -4,6 +4,7 @@ import { AlertTriangle, CheckCircle2, Clock, Wallet } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { MonthlyRevenueChart, InvoiceStatusChart } from "@/components/admin/financeiro/finance-charts";
+import { formatCurrency } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Financeiro | Painel 3M",
@@ -112,29 +113,29 @@ export default async function FinanceiroPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <div className="grid md:grid-cols-2 gap-4 lg:grid-cols-4">
             <StatCard
               icon={Wallet}
               label="Total faturado"
-              value={currencyFormatter.format(data.totalFaturado)}
+              value={formatCurrency(data.totalFaturado)}
               accent="navy"
             />
             <StatCard
               icon={CheckCircle2}
               label="Recebido"
-              value={currencyFormatter.format(data.totalRecebido)}
+              value={formatCurrency(data.totalRecebido)}
               accent="success"
             />
             <StatCard
               icon={Clock}
               label="Pendente"
-              value={currencyFormatter.format(data.totalPendente)}
+              value={formatCurrency(data.totalPendente)}
               accent="teal"
             />
             <StatCard
               icon={AlertTriangle}
               label="Vencido"
-              value={currencyFormatter.format(data.totalVencido)}
+              value={formatCurrency(data.totalVencido)}
               accent="destructive"
             />
           </div>
@@ -167,7 +168,7 @@ export default async function FinanceiroPage() {
                       {item.status}
                     </span>
                     <span className="font-semibold text-navy-700">
-                      {currencyFormatter.format(item.total)}
+                      {formatCurrency(item.total)}
                     </span>
                   </li>
                 ))}

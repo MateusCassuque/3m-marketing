@@ -70,7 +70,7 @@ export default async function AdminLeadsPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <div className="grid md:grid-cols-2 gap-4 lg:grid-cols-4">
             <StatCard icon={Users} label="Total de leads" value={data.total} accent="navy" />
             <StatCard icon={Inbox} label="Novos" value={data.novos} accent="teal" />
             <StatCard icon={MessageCircle} label="Em contato" value={data.emContato} accent="accent" />
