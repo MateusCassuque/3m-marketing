@@ -178,7 +178,7 @@ export function ProjectFormDialog({ open, onOpenChange, project, clients }: Proj
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="value">Valor (R$)</Label>
+              <Label htmlFor="value">Valor (Kz)</Label>
               <Input id="value" type="number" step="0.01" min="0" {...register("value")} />
               {errors.value && (
                 <p className="text-xs font-medium text-destructive">{errors.value.message}</p>

@@ -49,7 +49,7 @@ export function MonthlyRevenueChart({ data }: { data: MonthlyDatum[] }) {
           tick={{ fontSize: 11, fill: "#64748B" }}
           tickLine={false}
           axisLine={false}
-          tickFormatter={(value) => `R$${Math.round(value / 1000)}k`}
+          tickFormatter={(value) => `Kz ${Math.round(value / 1000)}k`}
         />
         <Tooltip
           cursor={{ fill: "rgba(21, 131, 166, 0.06)" }}

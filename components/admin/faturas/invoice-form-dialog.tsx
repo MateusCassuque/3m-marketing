@@ -83,14 +83,14 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice, projects }: Inv
       reset(
         invoice
           ? {
-              projectId: invoice.projectId,
-              amount: invoice.amount,
-              status: invoice.status,
-              issueDate: toDateInputValue(invoice.issueDate),
-              dueDate: toDateInputValue(invoice.dueDate),
-              paymentMethod: invoice.paymentMethod ?? "",
-              notes: invoice.notes ?? "",
-            }
+            projectId: invoice.projectId,
+            amount: invoice.amount,
+            status: invoice.status,
+            issueDate: toDateInputValue(invoice.issueDate),
+            dueDate: toDateInputValue(invoice.dueDate),
+            paymentMethod: invoice.paymentMethod ?? "",
+            notes: invoice.notes ?? "",
+          }
           : EMPTY_VALUES,
       );
     }
@@ -148,7 +148,7 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice, projects }: Inv
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="amount">Valor (R$)</Label>
+              <Label htmlFor="amount">Valor (Kz)</Label>
               <Input id="amount" type="number" step="0.01" min="0" {...register("amount")} />
               {errors.amount && (
                 <p className="text-xs font-medium text-destructive">{errors.amount.message}</p>

@@ -1,79 +1,79 @@
-"use client";
+"use client"
 
-import { useMemo, useState, useTransition } from "react";
-import { Eye, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { useMemo, useState, useTransition } from "react"
+import { Eye, Pencil, Plus, Search, Trash2 } from "lucide-react"
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
 import {
   InvoiceFormDialog,
   type InvoiceFormData,
   type ProjectOption,
-} from "@/components/admin/faturas/invoice-form-dialog";
-import { deleteInvoice } from "@/app/admin/(protected)/faturas/actions";
-import { INVOICE_STATUS_LABELS, INVOICE_STATUS_BADGE } from "@/lib/invoice-labels";
-import { formatCurrency } from "@/lib/utils";
-import { InvoiceViewDialog } from "./invoice-view-dialog";
+} from "@/components/admin/faturas/invoice-form-dialog"
+import { deleteInvoice } from "@/app/admin/(protected)/faturas/actions"
+import { INVOICE_STATUS_LABELS, INVOICE_STATUS_BADGE } from "@/lib/invoice-labels"
+import { formatCurrency } from "@/lib/utils"
+import { InvoiceViewDialog } from "./invoice-view-dialog"
 
 export type InvoiceRow = InvoiceFormData & {
-  project: { title: string; client: { name: string } };
-};
+  project: { title: string, client: { name: string } }
+}
 
-const dateFormatter = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+const dateFormatter = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", year: "numeric" })
 
 function isOverdue(invoice: InvoiceRow) {
-  return invoice.status === "PENDENTE" && new Date(invoice.dueDate) < new Date();
+  return invoice.status === "PENDENTE" && new Date(invoice.dueDate) < new Date()
 }
 
 export function InvoicesTable({
   invoices,
   projects,
 }: {
-  invoices: InvoiceRow[];
-  projects: ProjectOption[];
+  invoices: InvoiceRow[]
+  projects: ProjectOption[]
 }) {
-  const [query, setQuery] = useState("");
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingInvoice, setEditingInvoice] = useState<InvoiceRow | null>(null);
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [viewingInvoice, setViewingInvoice] = useState<InvoiceRow | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [query, setQuery] = useState("")
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingInvoice, setEditingInvoice] = useState<InvoiceRow | null>(null)
+  const [viewDialogOpen, setViewDialogOpen] = useState(false)
+  const [viewingInvoice, setViewingInvoice] = useState<InvoiceRow | null>(null)
+  const [isPending, startTransition] = useTransition()
 
   const filtered = useMemo(() => {
-    const term = query.trim().toLowerCase();
-    if (!term) return invoices;
+    const term = query.trim().toLowerCase()
+    if (!term) return invoices
     return invoices.filter(
       (invoice) =>
         invoice.number.toLowerCase().includes(term) ||
         invoice.project.title.toLowerCase().includes(term) ||
         invoice.project.client.name.toLowerCase().includes(term),
-    );
-  }, [invoices, query]);
+    )
+  }, [invoices, query])
 
   const handleNew = () => {
-    setEditingInvoice(null);
-    setDialogOpen(true);
-  };
+    setEditingInvoice(null)
+    setDialogOpen(true)
+  }
 
   const handleEdit = (invoice: InvoiceRow) => {
-    setEditingInvoice(invoice);
-    setDialogOpen(true);
-  };
+    setEditingInvoice(invoice)
+    setDialogOpen(true)
+  }
 
   const handleView = (invoice: InvoiceRow) => {
-    setViewingInvoice(invoice);
-    setViewDialogOpen(true);
-  };
+    setViewingInvoice(invoice)
+    setViewDialogOpen(true)
+  }
 
   const handleDelete = (invoice: InvoiceRow) => {
-    const confirmed = window.confirm(`Excluir a fatura ${invoice.number}?`);
-    if (!confirmed) return;
+    const confirmed = window.confirm(`Excluir a fatura ${invoice.number}?`)
+    if (!confirmed) return
 
     startTransition(async () => {
-      await deleteInvoice(invoice.id);
-    });
-  };
+      await deleteInvoice(invoice.id)
+    })
+  }
 
   return (
     <div className="rounded-2xl border border-border bg-white shadow-soft">
@@ -180,5 +180,5 @@ export function InvoicesTable({
         invoice={viewingInvoice}
       />
     </div>
-  );
+  )
 }

@@ -9,6 +9,9 @@ export async function requireAdmin() {
   const session = await auth();
   if (!session?.user) {
     throw new Error("Não autorizado.");
+  } 
+  if (session?.user.role !='ADMIN' ) {
+    throw new Error("Não autorizado.");
   }
   return session.user;
 }

@@ -53,7 +53,8 @@ export default async function AdminLeadsPage() {
           Leads recebidos pelo site
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Enviados pelo formulário de contato (/contato) e salvos via Prisma.
+          Enviados pelo formulário de contato
+          {/* (/contato) e salvos via Prisma. */}
         </p>
       </div>
 

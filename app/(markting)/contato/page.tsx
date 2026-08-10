@@ -1,17 +1,17 @@
-import type { Metadata } from "next";
+import type { Metadata } from "next"
 
-import { PageHero } from "@/components/page-hero";
-import { ContactForm } from "@/components/contact-form";
-import { ContactInfo } from "@/components/sections/contact-info";
+import { PageHero } from "@/components/page-hero"
+import { ContactForm } from "@/components/contact-form"
+import { ContactInfo } from "@/components/sections/contact-info"
 
 export const metadata: Metadata = {
   title: "Contato | 3M Agência de Marketing",
   description:
     "Fale com a 3M Agência de Marketing. Envie uma mensagem, confira nosso endereço no mapa e veja nossos horários de atendimento.",
-};
+}
 
-const MAPS_QUERY = encodeURIComponent("Av. Paulista, 1374, Bela Vista, São Paulo - SP");
-const MAPS_EMBED_SRC = `https://www.google.com/maps?q=${MAPS_QUERY}&output=embed`;
+const MAPS_QUERY = encodeURIComponent("Av. Paulista, 1374, Bela Vista, São Paulo - SP")
+const MAPS_EMBED_SRC = `https://www.google.com/maps?q=${MAPS_QUERY}&output=embed`
 
 export default function ContatoPage() {
   return (
@@ -61,5 +61,5 @@ export default function ContatoPage() {
         </div>
       </section>
     </>
-  );
+  )
 }

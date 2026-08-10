@@ -94,9 +94,8 @@ export default async function FinanceiroPage() {
           Financeiro
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Calculado em tempo real a partir das faturas — não é uma planilha
-          separada, é a mesma tabela de <code>Invoice</code> vista de outro
-          ângulo.
+          Calculado em tempo real a partir das faturas 
+          {/* — não é uma planilha separada, é a mesma tabela de <code>Invoice</code> vista de outro ângulo. */}
         </p>
       </div>
 
