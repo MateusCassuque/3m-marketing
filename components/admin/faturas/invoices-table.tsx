@@ -17,7 +17,14 @@ import { formatCurrency } from "@/lib/utils"
 import { InvoiceViewDialog } from "./invoice-view-dialog"
 
 export type InvoiceRow = InvoiceFormData & {
-  project: { title: string, client: { name: string } }
+  project: {
+    title: string, client: {
+      name: string,
+      adress: string
+      company: string
+      telefone: string
+    }
+  }
 }
 
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", year: "numeric" })

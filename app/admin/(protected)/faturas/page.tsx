@@ -14,7 +14,20 @@ export const dynamic = "force-dynamic";
 export default async function FaturasPage() {
   const [invoices, projects] = await Promise.all([
     prisma.invoice.findMany({
-      include: { project: { select: { title: true, client: { select: { name: true } } } } },
+      include: {
+        project: {
+          select: {
+            title: true, client: {
+              select: {
+                name: true,
+                address: true,
+                company: true,
+                phone: true,
+              }
+            }
+          }
+        }
+      },
       orderBy: { issueDate: "desc" },
     }),
     prisma.project.findMany({
@@ -33,7 +46,14 @@ export default async function FaturasPage() {
     dueDate: invoice.dueDate,
     paymentMethod: invoice.paymentMethod,
     notes: invoice.notes,
-    project: { title: invoice.project.title, client: { name: invoice.project.client.name } },
+    project: {
+      title: invoice.project.title, client: {
+        name: invoice.project.client.name,
+        telefone: invoice.project.client.phone || '',
+        adress: invoice.project.client.address || '',
+        company: invoice.project.client.company || '',
+      }
+    },
   }));
 
   const projectOptions: ProjectOption[] = projects.map((project) => ({
