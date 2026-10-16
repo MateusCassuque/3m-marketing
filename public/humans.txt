@@ -3,7 +3,7 @@ name: Kodeza · 3M
 version: 2.0.0
 
 /* TEAM */
-Company: Kodeza — Desenvolvimento de Websites e Aplicações Web
+Company: Kodeza — Desenvolvimento de Websites e Aplicações Web / Mateus F.L Cassuque
 From: Luanda, Angola
 
 /* THANKS */
