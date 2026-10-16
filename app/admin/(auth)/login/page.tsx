@@ -24,7 +24,10 @@ export default function LoginPage() {
       <aside className="relative isolate hidden overflow-hidden bg-hero-night p-12 text-white lg:flex lg:flex-col lg:justify-between">
         <CubesBackdrop className="absolute inset-0 -z-10" />
         <div className="bg-grid-lines pointer-events-none absolute inset-0 -z-10" aria-hidden="true" />
-        <Logo variant="light" className="h-10" />
+        <div className="">
+          <Logo variant="light" className="h-16" />
+        </div>
+
         <div>
           <h2 className="max-w-md text-balance font-display text-4xl font-bold leading-tight">
             Tudo o que a Kodeza · 3M gere, num painel só.
