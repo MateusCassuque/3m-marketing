@@ -1,11 +1,10 @@
 /* APP */
-name:3M-Agencia
-version: 1.0.1
+name: Kodeza · 3M
+version: 2.0.0
 
 /* TEAM */
-Developer: Mateus Cassuque
-Website: https://mateuscassuque.vercel.app
-From: Angola
+Company: Kodeza — Desenvolvimento de Websites e Aplicações Web
+From: Luanda, Angola
 
 /* THANKS */
-Build withe Next.js, Tailwind, Shadcn
+Built with Next.js, Tailwind, three.js and shadcn-style components

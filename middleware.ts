@@ -1,67 +1,32 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
+/**
+ * Primeira barreira do painel: sem cookie de sessão, redirecciona para o login.
+ * A validação real da sessão é feita em `app/admin/(protected)/layout.tsx` e em
+ * cada Server Action (`requireAdmin`) — o middleware só evita navegação inútil.
+ */
+export default function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
 
-export default async function middleware(request: NextRequest) {
-    try {
-        const session =
-            process.env.NODE_ENV === 'production'
-                ? request.cookies.get('__Secure-authjs.session-token')
-                : request.cookies.get('authjs.session-token')
+  const hasSession =
+    request.cookies.has("__Secure-authjs.session-token") ||
+    request.cookies.has("authjs.session-token");
 
-        const { pathname } = request.nextUrl
+  if (pathname === "/admin/login") {
+    if (hasSession) return NextResponse.redirect(new URL("/admin", request.url));
+    return NextResponse.next();
+  }
 
-        // 🚫 ignorar arquivos estáticos
-        if (pathname.startsWith('/_next') || pathname.startsWith('/api') || pathname.includes('.')) {
-            return NextResponse.next()
-        }
+  if (!hasSession) {
+    const login = new URL("/admin/login", request.url);
+    login.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(login);
+  }
 
-        // 📂 rotas públicas
-        const publicPaths = [
-            '/',
-            '/admin/login',
-            '/sobre',
-            '/admin/cadastrar',
-            '/terms-and-privacy',
-            '/servicos',
-            '/placeholder.png',
-            '/privacidade',
-            '/termos',
-            '/blog',
-            '/contato',
-            '/portfolio'
-        ]
-
-        if (pathname.startsWith('/blog/')) {
-            return NextResponse.next()
-        }
-
-        if (publicPaths.includes(pathname)) {
-            if ((pathname === '/admin/login' || pathname === '/admin/cadastrar') && session) {
-                return NextResponse.redirect(
-                    new URL('/perfil', request.url)
-                )
-            }
-            return NextResponse.next()
-        }
-
-        // 🔐 rotas privadas (root app)
-        if (!session) {
-            return NextResponse.redirect(
-                new URL('/admin/login', request.url)
-            )
-        }
-
-        return NextResponse.next()
-    } catch (err) {
-        console.error('Middleware error:', err)
-        return NextResponse.redirect(new URL('/admin/login', request.url))
-    }
+  return NextResponse.next();
 }
 
-// "/admin/:path*"
 export const config = {
-    matcher: [
-        '/((?!api|_next/|favicon.ico|manifest.json|robots.txt|service-worker.js|icons/|images|videos/).*)'
-    ]
-}
+  matcher: ["/admin/:path*"],
+};

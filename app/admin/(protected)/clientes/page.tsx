@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { ClientsTable } from "@/components/admin/clientes/clients-table";
 
 export const metadata: Metadata = {
-  title: "Clientes | Painel 3M",
+  title: "Clientes | Painel Kodeza",
   robots: { index: false, follow: false },
 };
 

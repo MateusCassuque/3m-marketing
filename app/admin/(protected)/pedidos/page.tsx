@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { ProjectsTable, type ProjectRow } from "@/components/admin/pedidos/projects-table";
 
 export const metadata: Metadata = {
-  title: "Pedidos | Painel 3M",
+  title: "Pedidos | Painel Kodeza",
   robots: { index: false, follow: false },
 };
 

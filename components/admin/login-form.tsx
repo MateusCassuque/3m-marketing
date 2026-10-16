@@ -44,13 +44,13 @@ export function LoginForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-1.5">
         <Label htmlFor="email">E-mail</Label>
-        <Input id="email" type="email" placeholder="voce@3magencia.com.br" {...register("email")} />
+        <Input id="email" type="email" placeholder="voce@3mvisa.site" autoComplete="username" {...register("email")} />
         {errors.email && <p className="text-xs font-medium text-destructive">{errors.email.message}</p>}
       </div>
 
       <div className="space-y-1.5">
         <Label htmlFor="password">Senha</Label>
-        <Input id="password" type="password" placeholder="••••••••" {...register("password")} />
+        <Input id="password" type="password" placeholder="••••••••" autoComplete="current-password" {...register("password")} />
         {errors.password && <p className="text-xs font-medium text-destructive">{errors.password.message}</p>}
       </div>
 
@@ -58,7 +58,7 @@ export function LoginForm() {
         <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">{formError}</p>
       )}
 
-      <Button type="submit" variant="teal" className="w-full" disabled={isSubmitting}>
+      <Button type="submit" variant="primary" className="w-full" disabled={isSubmitting}>
         {isSubmitting ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />

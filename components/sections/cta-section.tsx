@@ -2,44 +2,40 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, MessageCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { CubesBackdrop } from "@/components/three/cubes-backdrop";
+import { COMPANY } from "@/lib/site-data";
 import { useUIStore } from "@/store/use-ui-store";
 
 export function CtaSection() {
   const openContact = useUIStore((state) => state.openContact);
 
   return (
-    <section className="relative overflow-hidden bg-white py-20 lg:py-24">
-      <div
-        className="pointer-events-none absolute bottom-6 left-6 hidden h-28 w-28 text-primary-200 lg:block"
-        aria-hidden="true"
-      >
-        <div className="h-full w-full bg-dot-grid opacity-70" />
-      </div>
+    <section className="relative isolate overflow-hidden bg-hero-night py-24 text-white lg:py-32">
+      <CubesBackdrop className="absolute inset-0 -z-10" />
+      <div className="bg-grid-lines pointer-events-none absolute inset-0 -z-10 opacity-60" aria-hidden="true" />
 
-      <div className="container-padded relative grid grid-cols-1 items-center gap-10 lg:grid-cols-[1.1fr_1fr_auto] lg:gap-8">
+      <div className="container-padded relative text-center">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.6 }}
           transition={{ duration: 0.55, ease: "easeOut" }}
-          className="text-balance font-display text-3xl font-extrabold leading-tight text-navy-700 sm:text-4xl"
+          className="mx-auto max-w-3xl text-balance font-display text-4xl font-bold leading-[1.08] sm:text-6xl"
         >
-          Pronto para levar sua marca para o{" "}
-          <span className="text-primary-500">próximo nível</span>?
+          O seu projecto pode ser o próximo.
         </motion.h2>
-
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.6 }}
           transition={{ duration: 0.55, ease: "easeOut", delay: 0.1 }}
-          className="text-balance text-muted-foreground"
+          className="mx-auto mt-5 max-w-xl text-pretty text-lg text-white/70"
         >
-          Fale com nosso time e descubra como podemos criar estratégias que
-          geram resultados reais para o seu negócio.
+          Do website à gestão das redes sociais, criamos a solução digital certa para o seu
+          negócio. Conte-nos a ideia e enviamos uma proposta.
         </motion.p>
 
         <motion.div
@@ -47,18 +43,26 @@ export function CtaSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.6 }}
           transition={{ duration: 0.55, ease: "easeOut", delay: 0.2 }}
+          className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row"
         >
-          <Button variant="accent" size="lg" className="w-full lg:w-auto" onClick={openContact}>
-            Vamos conversar
+          <Button variant="accent" size="lg" onClick={openContact}>
+            Pedir proposta
             <ArrowRight className="h-4 w-4" />
           </Button>
-          <Link
-            href="/contato"
-            className="mt-3 block text-center text-sm font-semibold text-primary-600 hover:underline lg:text-left"
-          >
-            Prefere um formulário completo? Acesse a página de contato →
-          </Link>
+          <Button variant="outline-light" size="lg" asChild>
+            <a href={COMPANY.whatsappHref} target="_blank" rel="noreferrer">
+              <MessageCircle className="h-4 w-4" />
+              Falar por WhatsApp
+            </a>
+          </Button>
         </motion.div>
+        <p className="mt-6 text-sm text-white/55">
+          Ou envie uma mensagem detalhada na{" "}
+          <Link href="/contato" className="font-semibold text-white underline-offset-4 hover:underline">
+            página de contacto
+          </Link>
+          .
+        </p>
       </div>
     </section>
   );

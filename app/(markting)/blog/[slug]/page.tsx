@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
   const { slug } = await params;
   const post = getPostBySlug(slug);
 
-  if (!post) return { title: "Artigo não encontrado | 3M Agência de Marketing" };
+  if (!post) return { title: "Artigo não encontrado | Kodeza · 3M" };
 
   return {
     title: `${post.title} | Blog 3M`,

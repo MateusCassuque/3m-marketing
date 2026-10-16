@@ -6,9 +6,9 @@ import { CtaSection } from "@/components/sections/cta-section";
 import { BLOG_POSTS } from "@/app/(markting)/blog/posts-data";
 
 export const metadata: Metadata = {
-  title: "Blog | 3M Agência de Marketing",
+  title: "Blog | Kodeza · 3M",
   description:
-    "Artigos sobre estratégia, tráfego pago, mídias sociais e branding — direto da experiência de quem executa campanhas todos os dias.",
+    "Artigos sobre estratégia, tráfego pago, redes sociais e branding, escritos pela equipa da 3M.",
 };
 
 export default function BlogPage() {
@@ -16,8 +16,8 @@ export default function BlogPage() {
     <>
       <PageHero
         eyebrow="Blog"
-        title="Insights sobre marketing que geram resultado"
-        description="Conteúdo direto ao ponto, escrito por quem está na operação — sem fórmula pronta, sem enrolação."
+        title="Ideias de marketing para fazer o seu negócio crescer"
+        description="Conteúdo directo ao ponto, escrito por quem está na operação todos os dias."
       />
 
       <section className="bg-white py-20 lg:py-24">

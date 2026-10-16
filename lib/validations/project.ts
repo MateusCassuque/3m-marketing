@@ -11,12 +11,18 @@ export const PROJECT_STATUS_VALUES = [
 export const PRIORITY_VALUES = ["BAIXA", "MEDIA", "ALTA", "URGENTE"] as const;
 
 export const SERVICE_VALUES = [
+  "WEBSITE",
+  "WEBAPP",
+  "LANDING_PAGE",
+  "MIDIAS_SOCIAIS",
+  "IDENTIDADE_VISUAL",
+  "REGISTO_EMPRESA",
+  "OUTRO",
+  // Valores antigos — mantidos para pedidos já existentes.
   "ESTRATEGIA",
   "CRIATIVIDADE",
   "TRAFEGO",
-  "MIDIAS_SOCIAIS",
   "BRANDING",
-  "OUTRO",
 ] as const;
 
 export const projectSchema = z.object({

@@ -38,7 +38,7 @@ export function ContactForm({ className, onSuccess }: ContactFormProps) {
       name: "",
       email: "",
       phone: "",
-      service: "estrategia",
+      service: "website",
       message: "",
     },
   });
@@ -82,7 +82,7 @@ export function ContactForm({ className, onSuccess }: ContactFormProps) {
             <CheckCircle2 className="h-12 w-12 text-primary-500" />
             <h3 className="font-display text-xl font-bold text-navy-700">Mensagem enviada!</h3>
             <p className="max-w-xs text-sm text-muted-foreground">
-              Obrigado pelo contato. Nosso time vai retornar em breve.
+              Obrigado pelo contacto. A nossa equipa responde em até 24 horas úteis.
             </p>
             <Button variant="teal" className="mt-2" onClick={() => setStatus("idle")}>
               Enviar outra mensagem
@@ -116,7 +116,7 @@ export function ContactForm({ className, onSuccess }: ContactFormProps) {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="phone">Telefone (opcional)</Label>
-                <Input id="phone" placeholder="(11) 90000-0000" {...register("phone")} />
+                <Input id="phone" placeholder="+244 900 000 000" {...register("phone")} />
                 {errors.phone && (
                   <p className="text-xs font-medium text-destructive">{errors.phone.message}</p>
                 )}
@@ -140,7 +140,7 @@ export function ContactForm({ className, onSuccess }: ContactFormProps) {
               <Label htmlFor="message">Mensagem</Label>
               <Textarea
                 id="message"
-                placeholder="Conte um pouco sobre o seu projeto…"
+                placeholder="Conte-nos o que precisa: tipo de site, prazo, referências…"
                 {...register("message")}
               />
               {errors.message && (

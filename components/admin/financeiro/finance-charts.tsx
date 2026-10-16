@@ -52,11 +52,11 @@ export function MonthlyRevenueChart({ data }: { data: MonthlyDatum[] }) {
           tickFormatter={(value) => `Kz ${Math.round(value / 1000)}k`}
         />
         <Tooltip
-          cursor={{ fill: "rgba(21, 131, 166, 0.06)" }}
+          cursor={{ fill: "rgba(0, 152, 220, 0.06)" }}
           formatter={(value: number) => formatCurrency(value)}
           contentStyle={{ borderRadius: 12, border: "1px solid #E2E8F0", fontSize: 12 }}
         />
-        <Bar dataKey="total" fill="#1583A6" radius={[6, 6, 0, 0]} maxBarSize={40} />
+        <Bar dataKey="total" fill="#0098DC" radius={[6, 6, 0, 0]} maxBarSize={40} />
       </BarChart>
     </ResponsiveContainer>
   );

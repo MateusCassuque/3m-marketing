@@ -15,12 +15,13 @@ export default async function ProtectedAdminLayout({
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-0px)] bg-muted/40">
+    <div className="min-h-screen bg-[#F3F6FB] md:flex">
       <AdminSidebar
         userName={session.user.name ?? "Administrador"}
         userEmail={session.user.email ?? ""}
+        isAdmin={session.user.role === "ADMIN"}
       />
-      <div className="flex-1 overflow-x-hidden mt-10">{children}</div>
+      <div className="min-w-0 flex-1">{children}</div>
     </div>
   );
 }

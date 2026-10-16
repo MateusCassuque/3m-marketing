@@ -2,59 +2,40 @@
 
 import { motion } from "framer-motion";
 
-const STEPS = [
-  {
-    number: "01",
-    title: "Descoberta",
-    description: "Imersão no seu negócio, público e concorrência para entender o ponto de partida.",
-  },
-  {
-    number: "02",
-    title: "Estratégia",
-    description: "Definição de metas, canais prioritários e plano de ação com prazos claros.",
-  },
-  {
-    number: "03",
-    title: "Execução",
-    description: "Produção e lançamento das campanhas, conteúdos e peças criativas.",
-  },
-  {
-    number: "04",
-    title: "Otimização",
-    description: "Análise contínua de dados e ajustes para melhorar performance a cada ciclo.",
-  },
-];
+import { PROCESS } from "@/lib/site-data";
 
 export function ProcessSteps() {
   return (
     <div className="container-padded">
-      <div className="mx-auto max-w-2xl text-center">
-        <p className="eyebrow mx-auto justify-center">Como trabalhamos</p>
-        <h2 className="mt-4 text-balance font-display text-3xl font-extrabold text-navy-700 sm:text-4xl">
-          Um processo simples, do diagnóstico ao resultado
+      <div className="max-w-2xl">
+        <p className="eyebrow">Como trabalhamos</p>
+        <h2 className="mt-4 text-balance font-display text-3xl font-bold text-navy-700 sm:text-5xl">
+          Do primeiro contacto ao site no ar
         </h2>
       </div>
 
-      <div className="mt-14 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-        {STEPS.map((step, index) => (
-          <motion.div
-            key={step.number}
+      <ol className="relative mt-14 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div
+          className="pointer-events-none absolute left-0 right-0 top-6 hidden h-px bg-gradient-to-r from-primary-300 via-primary-400 to-accent-400 lg:block"
+          aria-hidden="true"
+        />
+        {PROCESS.map((step, index) => (
+          <motion.li
+            key={step.title}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.5 }}
+            viewport={{ once: true, amount: 0.4 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
-            className="relative rounded-2xl border border-border bg-white p-6"
+            className="relative"
           >
-            <span className="font-display text-4xl font-extrabold text-primary-100">
-              {step.number}
+            <span className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-navy-700 font-display text-lg font-bold text-white shadow-soft">
+              {index + 1}
             </span>
-            <h3 className="mt-3 font-display text-lg font-bold text-navy-700">{step.title}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              {step.description}
-            </p>
-          </motion.div>
+            <h3 className="mt-5 font-display text-lg font-bold text-navy-700">{step.title}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.text}</p>
+          </motion.li>
         ))}
-      </div>
+      </ol>
     </div>
   );
 }

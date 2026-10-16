@@ -1,68 +1,57 @@
-# 3M — Agência de Marketing (Next.js 15)
+# Kodeza · 3M — site institucional e painel
 
-Site institucional construído com **Next.js 15 (App Router)**, **React 18**,
-**Tailwind CSS**, **shadcn/ui** (componentes escritos à mão), **Framer
-Motion**, **Zustand**, **Zod** + **React Hook Form** e **Prisma**.
-Identidade visual replicada do briefing: navy `#123048`, teal `#1583A6` e
-laranja `#F5821F`.
+Site da **Kodeza** (desenvolvimento web) e da **3M** (marketing digital e redes sociais), em Next.js 15 (App Router),
+React 18, Tailwind, Framer Motion, **three.js**, Prisma/PostgreSQL e NextAuth.
 
-## Instalação
+## Arrancar
 
 ```bash
-npm install
-cp .env.example .env      # preencha DATABASE_URL (PostgreSQL)
-npx prisma migrate dev --name init
+npm install                 # ou: bun install
+cp .env.example .env        # preencha DATABASE_URL e NEXTAUTH_SECRET
+npx prisma migrate deploy   # aplica as migrações (inclui a nova: serviços web + notas nos leads)
+npm run seed                # cria a conta admin inicial (ADMIN_EMAIL / ADMIN_PASSWORD)
 npm run dev
 ```
 
-Abra `http://localhost:3000`.
+Criar outra conta do painel, sem endpoint público:
 
-## Estrutura
-
-```
-app/
-  layout.tsx            # fonts (Sora + Inter), metadata
-  globals.css            # tokens shadcn + paleta 3M
-  page.tsx               # monta a página inteira
-  api/contact/route.ts   # recebe o form (Zod) e salva via Prisma
-components/
-  logo.tsx
-  site-header.tsx         # nav sticky, menu mobile (Sheet), CTA
-  site-footer.tsx
-  contact-dialog.tsx      # form com Zod + RHF, chama /api/contact
-  sections/
-    hero-section.tsx
-    services-section.tsx
-    stats-band.tsx
-    cta-section.tsx
-  ui/                    # button, dialog, sheet, input, textarea, label, select
-lib/
-  utils.ts                # helper cn (clsx + tailwind-merge)
-  prisma.ts                # client singleton
-  validations/contact.ts   # schema Zod do formulário
-store/
-  use-ui-store.ts          # estado global (Zustand): menu mobile, modal de contato
-prisma/
-  schema.prisma            # model Lead
+```bash
+npm run admin:create -- "Nome" email@dominio.com "senha-com-10-ou-mais-caracteres" ADMIN
 ```
 
-## Paleta
+## Onde editar o conteúdo
 
-| Token                    | Hex       |
-|---------------------------|-----------|
-| `navy-700`                | `#123048` |
-| `primary-500` (teal)      | `#1583A6` |
-| `accent-500` (laranja)    | `#F5821F` |
+Tudo o que vem do Portfólio Corporativo está em **`lib/site-data.ts`**: contactos, serviços, planos e preços (Kz),
+pacotes de redes sociais, formas de pagamento, vantagens e a lista de projectos.
 
-## Notas
+- **Capturas de ecrã reais:** guarde a imagem em `public/images/projects/<slug>.jpg` e defina `image: "/images/projects/<slug>.jpg"`
+  no projecto. Sem `image`, o site mostra uma ilustração de browser com as cores do projecto.
+- **Preços/pacotes:** alterar `WEB_PLANS`, `SOCIAL_PACKAGES`, `EXTRA_SERVICES`.
 
-- Todas as seções usam `whileInView` do Framer Motion (dispara uma vez, sem
-  repetir ao rolar de volta).
-- `prefers-reduced-motion` é respeitado em `globals.css`.
-- O botão "Vamos conversar" (header e CTA final) abre o `ContactDialog`,
-  que valida com Zod via `react-hook-form` e envia para `/api/contact`,
-  que persiste o lead com Prisma (model `Lead` em `prisma/schema.prisma`).
-- Os links `Sobre`, `Portfólio` e `Blog` no menu apontam para âncoras
-  (`#sobre`, `#portfolio`, `#blog`) que ainda não existem como seções — o
-  briefing original só cobria Início, Serviços e o CTA final. Crie essas
-  seções/páginas quando tiver o conteúdo.
+## 3D
+
+- `components/three/k-geometry.ts` — contorno do "K" vectorizado do logótipo oficial.
+- `components/three/k-scene.ts` — cena do hero (K extrudido + píxeis flutuantes, reage ao rato).
+- `components/three/cubes-scene.ts` — campo de cubos (CTA e login).
+- Carregamento tardio (code-splitting), pausa fora do ecrã, respeita `prefers-reduced-motion` e cai para o logótipo estático sem WebGL.
+- `components/tilt-card.tsx` — cartões com inclinação 3D (portfólio).
+
+## Logótipos
+
+Em `public/images/`: `kodeza-logo.png` (cores), `kodeza-logo-light.png` (para fundos escuros), `kodeza-horizontal*.png`
+(cabeçalhos) e `kodeza-mark.png` (só o "K"). Ícones, `favicon.ico` e `opengraph-image.png` foram gerados a partir do logótipo.
+
+## Painel (`/admin`)
+
+Dashboard com filtro de período, KPIs em Kz, gráficos, entregas próximas e facturas em atraso · Leads (pesquisa, filtros,
+mudar estado, notas, converter em cliente, exportar CSV) · Clientes · Pedidos · Facturas (PDF com o logótipo novo) ·
+Financeiro · Utilizadores (só administradores).
+
+Perfis: **ADMIN** (tudo) e **EDITOR** (só consulta).
+
+## Segurança — o que mudou
+
+- Removido o endpoint público `/api/admin/register` (criava/repunha uma conta ADMIN com senha fixa no código).
+- Senhas passam a bcrypt; as contas antigas (SHA-1) são migradas no primeiro login.
+- `/dashboard` (público) removido; os leads vivem só em `/admin/leads`.
+- Middleware protege apenas `/admin/*`; o formulário de contacto tem limite por IP.

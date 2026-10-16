@@ -19,23 +19,32 @@ export const contactFormSchema = z.object({
     .optional()
     .or(z.literal("")),
   service: z.enum(
-    ["estrategia", "criatividade", "trafego", "midias-sociais", "branding", "outro"],
+    [
+      "website",
+      "webapp",
+      "landing-page",
+      "midias-sociais",
+      "identidade-visual",
+      "registo-empresa",
+      "outro",
+    ],
     { errorMap: () => ({ message: "Selecione um serviço." }) },
   ),
   message: z
     .string()
     .trim()
-    .min(10, "Conte um pouco mais sobre o seu projeto (mín. 10 caracteres).")
+    .min(10, "Conte um pouco mais sobre o seu projecto (mín. 10 caracteres).")
     .max(1000, "Mensagem muito longa."),
 });
 
 export type ContactFormValues = z.infer<typeof contactFormSchema>;
 
 export const serviceOptions: { value: ContactFormValues["service"]; label: string }[] = [
-  { value: "estrategia", label: "Estratégia" },
-  { value: "criatividade", label: "Criatividade" },
-  { value: "trafego", label: "Gestão de Tráfego" },
-  { value: "midias-sociais", label: "Mídias Sociais" },
-  { value: "branding", label: "Branding" },
-  { value: "outro", label: "Outro / não sei ainda" },
+  { value: "website", label: "Website institucional" },
+  { value: "webapp", label: "Aplicação web + painel admin" },
+  { value: "landing-page", label: "Landing page" },
+  { value: "midias-sociais", label: "Gestão de redes sociais (3M)" },
+  { value: "identidade-visual", label: "Identidade visual" },
+  { value: "registo-empresa", label: "Criação e registo de empresa" },
+  { value: "outro", label: "Outro / ainda não sei" },
 ];

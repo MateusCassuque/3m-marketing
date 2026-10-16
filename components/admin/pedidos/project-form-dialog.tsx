@@ -23,10 +23,9 @@ import {
   type ProjectValues,
   PROJECT_STATUS_VALUES,
   PRIORITY_VALUES,
-  SERVICE_VALUES,
 } from "@/lib/validations/project";
 import { PROJECT_STATUS_LABELS, PRIORITY_LABELS } from "@/lib/project-labels";
-import { SERVICE_LABELS } from "@/lib/lead-labels";
+import { ACTIVE_SERVICES, SERVICE_LABELS } from "@/lib/lead-labels";
 import { createProject, updateProject } from "@/app/admin/(protected)/pedidos/actions";
 
 export interface ProjectFormData {
@@ -53,7 +52,7 @@ const EMPTY_VALUES: ProjectValues = {
   title: "",
   description: "",
   clientId: "",
-  service: "ESTRATEGIA",
+  service: "WEBSITE",
   status: "BACKLOG",
   priority: "MEDIA",
   value: 0,
@@ -147,7 +146,7 @@ export function ProjectFormDialog({ open, onOpenChange, project, clients }: Proj
             <div className="space-y-1.5">
               <Label htmlFor="service">Serviço</Label>
               <Select id="service" {...register("service")}>
-                {SERVICE_VALUES.map((value) => (
+                {[...ACTIVE_SERVICES, ...(project && !ACTIVE_SERVICES.includes(project.service) ? [project.service] : [])].map((value) => (
                   <option key={value} value={value}>
                     {SERVICE_LABELS[value]}
                   </option>

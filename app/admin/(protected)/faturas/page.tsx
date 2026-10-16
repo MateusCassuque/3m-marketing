@@ -5,7 +5,7 @@ import { InvoicesTable, type InvoiceRow } from "@/components/admin/faturas/invoi
 import type { ProjectOption } from "@/components/admin/faturas/invoice-form-dialog";
 
 export const metadata: Metadata = {
-  title: "Faturas | Painel 3M",
+  title: "Faturas | Painel Kodeza",
   robots: { index: false, follow: false },
 };
 

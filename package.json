@@ -1,8 +1,8 @@
 {
   "name": "3m-agencia-marketing",
-  "version": "1.0.5",
+  "version": "2.0.0",
   "private": true,
-  "description": "Site institucional da 3M Agência de Marketing",
+  "description": "Site institucional da Kodeza · 3M — desenvolvimento web e marketing digital",
   "author": "Mateus Cassuque",
   "scripts": {
     "dev": "next dev",
@@ -11,9 +11,10 @@
     "lint": "next lint",
     "pd": "npx prisma migrate dev --name init",
     "pr": "npx prisma migrate reset --force",
-    "seed": "npx prisma db seed",
+    "seed": "prisma db seed",
     "ps": "npx prisma studio",
-    "pg": "npx prisma generate"
+    "pg": "npx prisma generate",
+    "admin:create": "tsx scripts/create-admin.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -36,20 +37,27 @@
     "recharts": "^2.15.2",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "three": "0.169.0",
     "zod": "^3.24.1",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
     "@types/minimatch": "^6.0.0",
     "@types/node": "^22.10.5",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
+    "@types/three": "0.169.0",
     "autoprefixer": "^10.4.20",
     "eslint": "^8.57.1",
     "eslint-config-next": "15.5.21",
     "postcss": "^8.4.49",
     "prisma": "^6.2.1",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.0",
     "typescript": "^5.7.3"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }

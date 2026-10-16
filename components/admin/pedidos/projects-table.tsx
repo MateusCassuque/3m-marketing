@@ -18,11 +18,6 @@ import { formatCurrency } from "@/lib/utils";
 
 export type ProjectRow = ProjectFormData & { client: { name: string } };
 
-const currencyFormatter = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-});
-
 export function ProjectsTable({
   projects,
   clients,

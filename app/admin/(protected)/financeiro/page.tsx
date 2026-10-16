@@ -7,13 +7,12 @@ import { MonthlyRevenueChart, InvoiceStatusChart } from "@/components/admin/fina
 import { formatCurrency } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Financeiro | Painel 3M",
+  title: "Financeiro | Painel Kodeza",
   robots: { index: false, follow: false },
 };
 
 export const dynamic = "force-dynamic";
 
-const currencyFormatter = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const MONTH_LABELS = [
   "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez",
 ];
@@ -65,7 +64,7 @@ async function getFinanceData() {
 
     const statusBreakdown = [
       { status: "Recebido", total: totalRecebido, color: "#059669" },
-      { status: "Pendente", total: totalPendente, color: "#1583A6" },
+      { status: "Pendente", total: totalPendente, color: "#0098DC" },
       { status: "Vencido", total: totalVencido, color: "#DC2626" },
     ];
 

@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-bold uppercase tracking-wide transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
@@ -13,16 +13,17 @@ const buttonVariants = cva(
           "bg-navy-700 text-white shadow-soft hover:bg-navy-600 hover:-translate-y-0.5 active:translate-y-0",
         accent:
           "bg-accent-500 text-white shadow-soft hover:bg-accent-600 hover:-translate-y-0.5 active:translate-y-0",
-        teal:
-          "bg-primary-500 text-white shadow-soft hover:bg-primary-600 hover:-translate-y-0.5 active:translate-y-0",
+        teal: "bg-primary-500 text-white shadow-soft hover:bg-primary-600 hover:-translate-y-0.5 active:translate-y-0",
         outline:
-          "border-2 border-primary-500 text-primary-600 bg-white hover:bg-primary-50 hover:-translate-y-0.5 active:translate-y-0",
+          "border-2 border-primary-500 bg-white text-primary-700 hover:bg-primary-50 hover:-translate-y-0.5 active:translate-y-0",
+        "outline-light":
+          "border border-white/30 bg-white/5 text-white backdrop-blur hover:bg-white/15 hover:-translate-y-0.5 active:translate-y-0",
         ghost: "text-navy-700 hover:bg-navy-50",
-        link: "text-primary-600 underline-offset-4 hover:underline normal-case font-semibold",
+        link: "font-semibold text-primary-600 underline-offset-4 hover:underline",
       },
       size: {
         default: "h-12 px-6 py-3",
-        sm: "h-10 px-4 text-xs",
+        sm: "h-10 px-4 text-[13px]",
         lg: "h-14 px-8 text-base",
         icon: "h-11 w-11 rounded-full",
       },

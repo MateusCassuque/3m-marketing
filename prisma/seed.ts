@@ -5,7 +5,7 @@ import { hashPassword } from "../lib/password";
 const prisma = new PrismaClient();
 
 async function main() {
-  const adminEmail = process.env.ADMIN_EMAIL ?? "admin@3magencia.com.br";
+  const adminEmail = process.env.ADMIN_EMAIL ?? "admin@3mvisa.site";
   const adminPassword = process.env.ADMIN_PASSWORD ?? "trocar-esta-senha-123";
 
   const passwordHash = await hashPassword(adminPassword);
@@ -14,14 +14,14 @@ async function main() {
     where: { email: adminEmail },
     update: {},
     create: {
-      name: "Administrador 3M",
+      name: "Administrador Kodeza",
       email: adminEmail,
       passwordHash,
       role: "ADMIN",
     },
   });
 
-  console.log(`✔ Admin pronto: ${adminEmail} / ${adminPassword}`);
+  console.log(`✔ Admin pronto: ${adminEmail}`);
   console.log("  (defina ADMIN_EMAIL e ADMIN_PASSWORD no .env para usar outras credenciais)");
 
   // Dados de exemplo — só cria se ainda não houver nenhum cliente,
@@ -34,25 +34,25 @@ async function main() {
 
   const cliente = await prisma.client.create({
     data: {
-      name: "Loja Modelo Ltda.",
-      email: "contato@lojamodelo.com.br",
-      phone: "(11) 91234-5678",
+      name: "Loja Modelo, Lda.",
+      email: "geral@lojamodelo.ao",
+      phone: "+244 923 000 000",
       company: "Loja Modelo",
-      taxId: "00.000.000/0001-00",
-      address: "Rua Exemplo, 100 — São Paulo, SP",
+      taxId: "5000000000",
+      address: "Rua Exemplo, 100 — Luanda",
       notes: "Cliente de demonstração criado pelo seed.",
     },
   });
 
   const projeto = await prisma.project.create({
     data: {
-      title: "Campanha de lançamento — coleção verão",
-      description: "Estratégia + tráfego pago para o lançamento da nova coleção.",
+      title: "Website institucional + redes sociais",
+      description: "Website institucional com 3 e-mails profissionais e gestão mensal de redes sociais.",
       clientId: cliente.id,
-      service: "TRAFEGO",
+      service: "WEBSITE",
       status: "EM_ANDAMENTO",
       priority: "ALTA",
-      value: 8500,
+      value: 125000,
       startDate: new Date(),
       dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     },
@@ -62,12 +62,12 @@ async function main() {
     data: {
       number: "FAT-0001",
       projectId: projeto.id,
-      amount: 4250,
+      amount: 62500,
       status: "PAGA",
       issueDate: new Date(),
       dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
       paidAt: new Date(),
-      paymentMethod: "Pix",
+      paymentMethod: "Transferência bancária",
       notes: "Primeira parcela (50%).",
     },
   });
@@ -76,7 +76,7 @@ async function main() {
     data: {
       number: "FAT-0002",
       projectId: projeto.id,
-      amount: 4250,
+      amount: 62500,
       status: "PENDENTE",
       issueDate: new Date(),
       dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),

@@ -40,7 +40,7 @@ const SheetContent = React.forwardRef<
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="absolute right-5 top-5 rounded-full p-1.5 text-navy-400 transition-colors hover:bg-navy-50 hover:text-navy-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500">
+      <DialogPrimitive.Close className="absolute right-5 top-5 rounded-full p-1.5 opacity-60 transition hover:bg-white/10 hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500">
         <X className="h-4 w-4" />
         <span className="sr-only">Fechar menu</span>
       </DialogPrimitive.Close>

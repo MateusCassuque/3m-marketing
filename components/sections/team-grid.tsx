@@ -53,7 +53,7 @@ export function TeamGrid() {
       initial="hidden"
       whileInView="show"
       viewport={{ once: true, amount: 0.3 }}
-      className="mt-14 grid grid-cols-2 gap-6 sm:grid-cols-4"
+      className="mt-14 grid grid-cols-2 gap-8 sm:grid-cols-4"
     >
       {TEAM.map((member) => (
         <motion.div key={member.name} variants={item} className="text-center">

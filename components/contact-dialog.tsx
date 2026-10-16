@@ -18,9 +18,9 @@ export function ContactDialog() {
     <Dialog open={isContactOpen} onOpenChange={(open) => !open && closeContact()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Vamos conversar</DialogTitle>
+          <DialogTitle>Peça a sua proposta</DialogTitle>
           <DialogDescription>
-            Conte um pouco sobre seu projeto e retornamos com uma proposta.
+            Conte-nos o que precisa e respondemos em até 24 horas úteis, com preço em Kwanzas.
           </DialogDescription>
         </DialogHeader>
         <ContactForm className="mt-2" onSuccess={() => {}} />

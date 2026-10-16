@@ -1,21 +1,13 @@
 {
-  "name": "3M Agência",
-  "short_name": "3M",
+  "name": "Kodeza · 3M",
+  "short_name": "Kodeza",
   "start_url": "/",
-  "display": "fullscreen",
-  "background_color": "#ffffff",
-  "theme_color": "#1a498f",
-  "description": "Site institucional da 3M Agência de Marketing",
+  "display": "standalone",
+  "background_color": "#04132E",
+  "theme_color": "#04132E",
+  "description": "Websites, aplicações web e marketing digital em Angola",
   "icons": [
-    {
-      "src": "/icons/icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/icons/icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
+    { "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png" }
   ]
 }

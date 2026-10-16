@@ -1,11 +1,12 @@
 import type { Config } from "tailwindcss";
 
+// Paleta extraída do logotipo da Kodeza:
+//  - navy      → o azul-marinho do wordmark
+//  - primary   → as fitas do "K" (do ciano ao azul profundo)
+//  - accent    → o laranja da seta e do pixel
 const config: Config = {
   darkMode: ["class"],
-  content: [
-    "./app/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-  ],
+  content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: {
     container: {
       center: true,
@@ -16,8 +17,8 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        display: ["var(--font-sora)", "sans-serif"],
-        sans: ["var(--font-inter)", "sans-serif"],
+        display: ["var(--font-display)", "system-ui", "sans-serif"],
+        sans: ["var(--font-body)", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -28,35 +29,40 @@ const config: Config = {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
-          50: "#EAF6FA",
-          100: "#D2ECF3",
-          200: "#A6D9E8",
-          300: "#71BFD7",
-          400: "#3FA1C0",
-          500: "#1583A6",
-          600: "#136A88",
-          700: "#125469",
-          800: "#123C4A",
-          900: "#0F2C38",
+          50: "#EAF7FE",
+          100: "#CFEEFC",
+          200: "#9EDDF8",
+          300: "#5CC8F2",
+          400: "#1FB4EC",
+          500: "#0098DC",
+          600: "#007EC7",
+          700: "#0059A2",
+          800: "#00407A",
+          900: "#002B6D",
         },
         navy: {
-          DEFAULT: "#123048",
-          50: "#EDF1F5",
-          400: "#2E4F6B",
-          500: "#1B3A54",
-          600: "#152E43",
-          700: "#123048",
-          800: "#0D2233",
-          900: "#081722",
+          DEFAULT: "#0A2A5E",
+          50: "#EEF2F8",
+          100: "#D9E1EE",
+          200: "#B3C2DB",
+          300: "#8197BA",
+          400: "#4F6C9B",
+          500: "#2B4A7E",
+          600: "#17376B",
+          700: "#0A2A5E",
+          800: "#071E45",
+          900: "#04132E",
+          950: "#020B1D",
         },
         accent: {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
-          50: "#FFF3E7",
-          400: "#FA9C4B",
-          500: "#F5821F",
-          600: "#E06E0E",
-          700: "#BC5808",
+          50: "#FFF3E6",
+          100: "#FFE2C2",
+          400: "#FF9B3D",
+          500: "#FF7F0A",
+          600: "#E66A00",
+          700: "#B85200",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
@@ -81,12 +87,15 @@ const config: Config = {
         sm: "calc(var(--radius) - 4px)",
       },
       backgroundImage: {
-        "brand-gradient": "linear-gradient(135deg, #1583A6 0%, #123048 100%)",
-        "brand-arrow": "linear-gradient(90deg, #F5821F 0%, #FBBF77 100%)",
+        "brand-gradient": "linear-gradient(135deg, #0098DC 0%, #0A2A5E 100%)",
+        "brand-arrow": "linear-gradient(90deg, #FF7F0A 0%, #FFB36B 100%)",
+        "hero-night":
+          "radial-gradient(1200px 600px at 78% 8%, rgba(0,152,220,0.35), transparent 60%), radial-gradient(800px 500px at 8% 100%, rgba(255,127,10,0.16), transparent 60%), linear-gradient(180deg, #04132E 0%, #071E45 100%)",
       },
       boxShadow: {
-        card: "0 20px 45px -20px rgba(18, 48, 72, 0.35)",
-        soft: "0 10px 30px -12px rgba(18, 48, 72, 0.18)",
+        card: "0 24px 50px -24px rgba(4, 19, 46, 0.35)",
+        soft: "0 10px 30px -14px rgba(4, 19, 46, 0.18)",
+        glow: "0 0 0 1px rgba(255,255,255,0.08), 0 30px 80px -30px rgba(0,152,220,0.55)",
       },
       keyframes: {
         "accordion-down": {
@@ -101,6 +110,10 @@ const config: Config = {
           "0%, 100%": { transform: "translateY(0px)" },
           "50%": { transform: "translateY(-10px)" },
         },
+        marquee: {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(-50%)" },
+        },
         "pulse-ring": {
           "0%": { transform: "scale(0.95)", opacity: "0.7" },
           "70%": { transform: "scale(1.15)", opacity: "0" },
@@ -111,6 +124,7 @@ const config: Config = {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         float: "float 5s ease-in-out infinite",
+        marquee: "marquee 40s linear infinite",
         "pulse-ring": "pulse-ring 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
     },

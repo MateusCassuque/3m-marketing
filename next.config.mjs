@@ -9,6 +9,13 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      // O antigo painel público de leads foi integrado no painel protegido.
+      { source: "/dashboard", destination: "/admin/leads", permanent: true },
+      { source: "/admin/cadastrar", destination: "/admin/login", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;

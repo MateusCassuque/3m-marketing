@@ -1,0 +1,8 @@
+-- Novos serviços (Kodeza: desenvolvimento web) e notas internas nos leads.
+ALTER TYPE "ServiceInterest" ADD VALUE IF NOT EXISTS 'WEBSITE';
+ALTER TYPE "ServiceInterest" ADD VALUE IF NOT EXISTS 'WEBAPP';
+ALTER TYPE "ServiceInterest" ADD VALUE IF NOT EXISTS 'LANDING_PAGE';
+ALTER TYPE "ServiceInterest" ADD VALUE IF NOT EXISTS 'IDENTIDADE_VISUAL';
+ALTER TYPE "ServiceInterest" ADD VALUE IF NOT EXISTS 'REGISTO_EMPRESA';
+
+ALTER TABLE "Lead" ADD COLUMN IF NOT EXISTS "notes" TEXT;

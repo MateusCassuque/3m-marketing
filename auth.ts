@@ -2,7 +2,7 @@ import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 
 import { prisma } from "@/lib/prisma"
-import { verifyPassword } from "@/lib/password"
+import { hashPassword, isLegacyHash, verifyPassword } from "@/lib/password"
 import { loginSchema } from "@/lib/validations/auth"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -30,6 +30,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const isValid = await verifyPassword(password, admin.passwordHash)
         if (!isValid) return null
+
+        // Migra hashes SHA-1 antigos para bcrypt (com salt) no primeiro login.
+        if (isLegacyHash(admin.passwordHash)) {
+          try {
+            await prisma.admin.update({
+              where: { id: admin.id },
+              data: { passwordHash: await hashPassword(password) },
+            })
+          } catch (error) {
+            console.error("[auth] não foi possível actualizar o hash da senha", error)
+          }
+        }
 
         return {
           id: admin.id,

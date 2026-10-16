@@ -1,13 +1,12 @@
-import { Phone } from 'lucide-react';
 import jsPDF from "jspdf"
 
-import { INVOICE_LOGO_BASE64 } from "@/lib/invoice-logo"
+import { INVOICE_LOGO_BASE64, INVOICE_LOGO_RATIO } from "@/lib/invoice-logo"
 
 import type { InvoiceRow } from "@/components/admin/faturas/invoices-table"
 
 // Dados fixos da empresa emissora
 const COMPANY = {
-    name: "3M Visa - Marketing",
+    name: "Kodeza · 3M",
     address: "CASA S/N, ZONA 16, SAMBIZANGA, LUANDA",
     nif: "5002516888",
 }
@@ -36,8 +35,8 @@ export function generateInvoicePdf(invoice: InvoiceRow) {
     const rightX = 190
 
     // --- Logotipo ---
-    const logoWidth = 32
-    const logoHeight = logoWidth * (312 / 500)
+    const logoWidth = 36
+    const logoHeight = logoWidth / INVOICE_LOGO_RATIO
     doc.addImage(INVOICE_LOGO_BASE64, "JPEG", marginX, 15, logoWidth, logoHeight)
 
     // --- Título e metadados ---
@@ -97,7 +96,7 @@ export function generateInvoicePdf(invoice: InvoiceRow) {
     const tableY = y + 30
     const tableWidth = rightX - marginX
 
-    doc.setFillColor(0, 100, 140)
+    doc.setFillColor(10, 42, 94)
     doc.rect(marginX, tableY, tableWidth, 8, "F")
     doc.setTextColor(255, 255, 255)
     doc.setFont("helvetica", "bold")

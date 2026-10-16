@@ -1,4 +1,4 @@
-// Prisma schema — 3M Agência de Marketing
+// Prisma schema — Kodeza · 3M
 // Executar `npm run pd` (migrate dev) após configurar DATABASE_URL, depois `npm run seed`.
 
 generator client {
@@ -19,6 +19,11 @@ enum ServiceInterest {
   MIDIAS_SOCIAIS
   BRANDING
   OUTRO
+  WEBSITE
+  WEBAPP
+  LANDING_PAGE
+  IDENTIDADE_VISUAL
+  REGISTO_EMPRESA
 }
 
 enum LeadStatus {
@@ -37,6 +42,7 @@ model Lead {
   service   ServiceInterest
   message   String
   status    LeadStatus      @default(NOVO)
+  notes     String?
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
 

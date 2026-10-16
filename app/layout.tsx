@@ -1,68 +1,67 @@
-import type { Metadata } from "next"
-import { Sora, Inter } from "next/font/google"
-import "./globals.css"
+import type { Metadata, Viewport } from "next";
+import { Bricolage_Grotesque, Instrument_Sans } from "next/font/google";
+import "./globals.css";
 
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
-import { ContactDialog } from "@/components/contact-dialog"
-
-const sora = Sora({
+const display = Bricolage_Grotesque({
   subsets: ["latin"],
-  variable: "--font-sora",
-  weight: ["600", "700", "800"],
+  variable: "--font-display",
   display: "swap",
-})
+});
 
-const inter = Inter({
+const body = Instrument_Sans({
   subsets: ["latin"],
-  variable: "--font-inter",
-  weight: ["400", "500", "600", "700"],
+  variable: "--font-body",
   display: "swap",
-})
+});
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.3mvisa.site";
 
 export const metadata: Metadata = {
-  title: "3M | Agência de Marketing — Transformamos ideias em resultados reais",
-  description:
-    "Estratégias inteligentes, criatividade sem limites e foco em resultados para impulsionar o crescimento da sua marca.",
-  keywords: [
-    "agência de marketing",
-    "gestão de tráfego",
-    "branding",
-    "mídias sociais",
-    "estratégia digital",
-  ],
-  openGraph: {
-    title: "3M | Agência de Marketing",
-    description:
-      "Transformamos ideias em resultados reais. Estratégia, criatividade e performance para o crescimento da sua marca.",
-    locale: "pt_BR",
-    type: "website",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Kodeza · 3M | Websites, aplicações web e marketing digital em Angola",
+    template: "%s | Kodeza · 3M",
   },
-}
+  description:
+    "A Kodeza cria websites e aplicações web para empresas angolanas. A 3M trata das suas redes sociais. Domínio e hospedagem incluídos, preços em Kwanzas.",
+  keywords: [
+    "criação de sites Angola",
+    "desenvolvimento web Luanda",
+    "aplicações web",
+    "landing page",
+    "gestão de redes sociais",
+    "marketing digital Angola",
+    "Kodeza",
+    "3M",
+  ],
+  applicationName: "Kodeza · 3M",
+  authors: [{ name: "Kodeza" }],
+  manifest: "/manifest.json",
+  openGraph: {
+    title: "Kodeza · 3M | Tecnologia que transforma ideias",
+    description:
+      "Websites, aplicações web e gestão de redes sociais para empresas angolanas. Domínio e hospedagem incluídos.",
+    locale: "pt_AO",
+    type: "website",
+    siteName: "Kodeza · 3M",
+  },
+  twitter: { card: "summary_large_image" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#04132E",
+  width: "device-width",
+  initialScale: 1,
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-Ao" className={`${sora.variable} ${inter.variable}`}>
-      <head>
-        {/* <link rel="icon" href={'/placeholder.png'} /> */}
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#1a498f" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-
-        <meta name="author" content="Mateus Cassuque" />
-        <meta name="designer" content="Mateus Cassuque" />
-        <meta name="copyright" content="© 2025 Mateus Cassuque" />
-
-      </head>
-      <body>
-        <main>{children}</main>
-      </body>
+    <html lang="pt-AO" className={`${display.variable} ${body.variable}`}>
+      <body>{children}</body>
     </html>
-  )
+  );
 }
