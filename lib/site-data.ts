@@ -482,5 +482,6 @@ export const NAV_LINKS = [
   { label: "Portfólio", href: "/portfolio" },
   { label: "Sobre", href: "/sobre" },
   { label: "Blog", href: "/blog" },
+  { label: "FAQ", href: "/faq" },
   { label: "Contacto", href: "/contato" },
 ];

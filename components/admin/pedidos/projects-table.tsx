@@ -1,44 +1,49 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useState } from "react";
 import type { Client } from "@prisma/client";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { CalendarClock, Pencil, Plus, Trash2, User } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   ProjectFormDialog,
   type ProjectFormData,
 } from "@/components/admin/pedidos/project-form-dialog";
+import { Pagination } from "@/components/admin/pagination";
+import { SearchForm } from "@/components/admin/list-toolbar";
+import {
+  CardActions,
+  RowActions,
+  STICKY_TD,
+  STICKY_TH,
+  type RowAction,
+} from "@/components/admin/row-actions";
 import { deleteProject } from "@/app/admin/(protected)/pedidos/actions";
-import { PROJECT_STATUS_LABELS, PROJECT_STATUS_BADGE, PRIORITY_LABELS, PRIORITY_BADGE } from "@/lib/project-labels";
+import {
+  PROJECT_STATUS_LABELS,
+  PROJECT_STATUS_BADGE,
+  PRIORITY_LABELS,
+  PRIORITY_BADGE,
+} from "@/lib/project-labels";
 import { SERVICE_LABELS } from "@/lib/lead-labels";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDateNotTime } from "@/lib/utils";
 
 export type ProjectRow = ProjectFormData & { client: { name: string } };
 
-export function ProjectsTable({
-  projects,
-  clients,
-}: {
+interface ProjectsTableProps {
   projects: ProjectRow[];
   clients: Client[];
-}) {
-  const [query, setQuery] = useState("");
+  q: string;
+  page: number;
+  totalPages: number;
+  total: number;
+}
+
+export function ProjectsTable({ projects, clients, q, page, totalPages, total }: ProjectsTableProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<ProjectRow | null>(null);
-  const [isPending, startTransition] = useTransition();
-
-  const filtered = useMemo(() => {
-    const term = query.trim().toLowerCase();
-    if (!term) return projects;
-    return projects.filter(
-      (project) =>
-        project.title.toLowerCase().includes(term) ||
-        project.client.name.toLowerCase().includes(term),
-    );
-  }, [projects, query]);
+  const [busy, setBusy] = useState(false);
 
   const handleNew = () => {
     setEditingProject(null);
@@ -50,103 +55,115 @@ export function ProjectsTable({
     setDialogOpen(true);
   };
 
-  const handleDelete = (project: ProjectRow) => {
+  const handleDelete = async (project: ProjectRow) => {
     const confirmed = window.confirm(
-      `Excluir o pedido "${project.title}"? Isso também remove as faturas vinculadas.`,
+      `Eliminar o pedido "${project.title}"? Isto também remove as facturas associadas.`,
     );
     if (!confirmed) return;
 
-    startTransition(async () => {
+    setBusy(true);
+    try {
       await deleteProject(project.id);
-    });
+    } catch (error) {
+      console.error(error);
+      window.alert("Não foi possível eliminar o pedido.");
+    } finally {
+      setBusy(false);
+    }
   };
+
+  const actionsFor = (project: ProjectRow): RowAction[] => [
+    { label: "Editar", icon: Pencil, tone: "primary", onClick: () => handleEdit(project) },
+    { label: "Eliminar", icon: Trash2, tone: "danger", disabled: busy, onClick: () => handleDelete(project) },
+  ];
 
   return (
     <div className="rounded-2xl border border-border bg-white shadow-soft">
       <div className="flex flex-col gap-3 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-xs">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Buscar por título ou cliente…"
-            className="pl-9"
-          />
-        </div>
+        <SearchForm q={q} basePath="/admin/pedidos" placeholder="Pesquisar por título ou cliente…" />
         <Button variant="teal" onClick={handleNew} className="w-full sm:w-auto">
           <Plus className="h-4 w-4" />
           Novo pedido
         </Button>
       </div>
 
-      {filtered.length === 0 ? (
-        <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
-          {projects.length === 0
-            ? "Nenhum pedido cadastrado ainda."
-            : "Nenhum pedido encontrado para essa busca."}
+      {projects.length === 0 ? (
+        <div className="flex h-40 items-center justify-center px-6 text-center text-sm text-muted-foreground">
+          {q ? "Nenhum pedido encontrado para esta pesquisa." : "Ainda não há pedidos registados."}
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[860px] text-left text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/50 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                <th className="px-5 py-3">Pedido</th>
-                <th className="px-5 py-3">Cliente</th>
-                <th className="px-5 py-3">Serviço</th>
-                <th className="px-5 py-3">Status</th>
-                <th className="px-5 py-3">Prioridade</th>
-                <th className="px-5 py-3">Valor</th>
-                <th className="px-5 py-3 text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((project) => (
-                <tr key={project.id} className="border-b border-border last:border-0">
-                  <td className="px-5 py-3.5 font-medium text-navy-700">{project.title}</td>
-                  <td className="px-5 py-3.5 text-navy-600">{project.client.name}</td>
-                  <td className="px-5 py-3.5 text-muted-foreground">
-                    {SERVICE_LABELS[project.service]}
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <Badge variant={PROJECT_STATUS_BADGE[project.status]}>
-                      {PROJECT_STATUS_LABELS[project.status]}
-                    </Badge>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <Badge variant={PRIORITY_BADGE[project.priority]}>
-                      {PRIORITY_LABELS[project.priority]}
-                    </Badge>
-                  </td>
-                  <td className="px-5 py-3.5 font-semibold text-navy-700">
+        <>
+          {/* Telemóvel: cartões */}
+          <ul className="divide-y divide-border md:hidden">
+            {projects.map((project) => (
+              <li key={project.id} className="p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="font-display text-base font-bold text-navy-700">{project.title}</p>
+                  <p className="shrink-0 font-display text-base font-bold text-navy-700">
                     {formatCurrency(project.value)}
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <div className="flex justify-end gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => handleEdit(project)}
-                        className="rounded-lg p-2 text-navy-500 transition-colors hover:bg-primary-50 hover:text-primary-600"
-                        aria-label={`Editar ${project.title}`}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(project)}
-                        disabled={isPending}
-                        className="rounded-lg p-2 text-navy-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
-                        aria-label={`Excluir ${project.title}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
+                  </p>
+                </div>
+                <p className="mt-1 flex items-center gap-1.5 text-sm text-navy-600">
+                  <User className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  {project.client.name}
+                  <span className="text-muted-foreground">· {SERVICE_LABELS[project.service]}</span>
+                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <Badge variant={PROJECT_STATUS_BADGE[project.status]}>{PROJECT_STATUS_LABELS[project.status]}</Badge>
+                  <Badge variant={PRIORITY_BADGE[project.priority]}>{PRIORITY_LABELS[project.priority]}</Badge>
+                  {project.dueDate && (
+                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                      <CalendarClock className="h-3.5 w-3.5" />
+                      Entrega {formatDateNotTime(project.dueDate)}
+                    </span>
+                  )}
+                </div>
+                <CardActions actions={actionsFor(project)} subject={project.title} />
+              </li>
+            ))}
+          </ul>
+
+          {/* Ecrãs médios e grandes: tabela com a coluna de ações fixa */}
+          <div className="hidden overflow-x-auto md:block">
+            <table className="w-full min-w-[860px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted text-xs font-semibold text-muted-foreground">
+                  <th className="px-5 py-3">Pedido</th>
+                  <th className="px-5 py-3">Cliente</th>
+                  <th className="px-5 py-3">Serviço</th>
+                  <th className="px-5 py-3">Estado</th>
+                  <th className="px-5 py-3">Prioridade</th>
+                  <th className="px-5 py-3">Valor</th>
+                  <th className={STICKY_TH}>Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {projects.map((project) => (
+                  <tr key={project.id} className="group border-b border-border last:border-0 hover:bg-primary-50/40">
+                    <td className="px-5 py-3.5 font-medium text-navy-700">{project.title}</td>
+                    <td className="px-5 py-3.5 text-navy-600">{project.client.name}</td>
+                    <td className="px-5 py-3.5 text-muted-foreground">{SERVICE_LABELS[project.service]}</td>
+                    <td className="px-5 py-3.5">
+                      <Badge variant={PROJECT_STATUS_BADGE[project.status]}>
+                        {PROJECT_STATUS_LABELS[project.status]}
+                      </Badge>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <Badge variant={PRIORITY_BADGE[project.priority]}>{PRIORITY_LABELS[project.priority]}</Badge>
+                    </td>
+                    <td className="px-5 py-3.5 font-semibold text-navy-700">{formatCurrency(project.value)}</td>
+                    <td className={STICKY_TD}>
+                      <RowActions actions={actionsFor(project)} subject={project.title} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
+
+      <Pagination basePath="/admin/pedidos" page={page} totalPages={totalPages} total={total} params={{ q }} />
 
       <ProjectFormDialog
         open={dialogOpen}

@@ -25,9 +25,8 @@ export default function LoginPage() {
         <CubesBackdrop className="absolute inset-0 -z-10" />
         <div className="bg-grid-lines pointer-events-none absolute inset-0 -z-10" aria-hidden="true" />
         <div className="">
-          <Logo variant="light" className="h-16" />
+          <Logo variant="light" className="h-15" />
         </div>
-
         <div>
           <h2 className="max-w-md text-balance font-display text-4xl font-bold leading-tight">
             Tudo o que a Kodeza · 3M gere, num painel só.

@@ -92,7 +92,31 @@ export function LeadsManager({ leads, canEdit }: { leads: LeadRow[]; canEdit: bo
 
   return (
     <>
-      <div className="overflow-x-auto rounded-2xl border border-border bg-white shadow-soft">
+      {/* Telemóvel: cartões */}
+      <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-white shadow-soft md:hidden">
+        {leads.map((lead) => (
+          <li key={lead.id} className="p-5">
+            <div className="flex items-start justify-between gap-3">
+              <button type="button" onClick={() => open(lead)} className="min-w-0 text-left">
+                <span className="block truncate font-display text-base font-bold text-navy-700">{lead.name}</span>
+                <span className="block truncate text-sm text-muted-foreground">{lead.email}</span>
+              </button>
+              <Badge variant={STATUS_BADGE_VARIANT[lead.status]}>{STATUS_LABELS[lead.status]}</Badge>
+            </div>
+            <p className="mt-2 text-sm text-navy-600">
+              {SERVICE_LABELS[lead.service]}
+              <span className="text-muted-foreground"> · {formatDate(lead.createdAt)}</span>
+            </p>
+            <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{lead.message}</p>
+            <Button variant="outline" size="sm" className="mt-4 w-full" onClick={() => open(lead)}>
+              Abrir lead
+            </Button>
+          </li>
+        ))}
+      </ul>
+
+      {/* Ecrãs médios e grandes: tabela */}
+      <div className="hidden overflow-x-auto rounded-2xl border border-border bg-white shadow-soft md:block">
         <table className="w-full min-w-[820px] text-left text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/60 text-xs font-semibold text-muted-foreground">

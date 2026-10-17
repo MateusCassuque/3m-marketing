@@ -1,32 +1,36 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useState } from "react";
 import type { Client } from "@prisma/client";
-import { Building2, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Building2, Mail, Pencil, Phone, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ClientFormDialog } from "@/components/admin/clientes/client-form-dialog";
+import { Pagination } from "@/components/admin/pagination";
+import { SearchForm } from "@/components/admin/list-toolbar";
+import {
+  CardActions,
+  RowActions,
+  STICKY_TD,
+  STICKY_TH,
+  type RowAction,
+} from "@/components/admin/row-actions";
 import { deleteClient } from "@/app/admin/(protected)/clientes/actions";
 
 type ClientWithCount = Client & { _count: { projects: number } };
 
-export function ClientsTable({ clients }: { clients: ClientWithCount[] }) {
-  const [query, setQuery] = useState("");
+interface ClientsTableProps {
+  clients: ClientWithCount[];
+  q: string;
+  page: number;
+  totalPages: number;
+  total: number;
+}
+
+export function ClientsTable({ clients, q, page, totalPages, total }: ClientsTableProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
-  const [isPending, startTransition] = useTransition();
-
-  const filtered = useMemo(() => {
-    const term = query.trim().toLowerCase();
-    if (!term) return clients;
-    return clients.filter(
-      (client) =>
-        client.name.toLowerCase().includes(term) ||
-        client.email.toLowerCase().includes(term) ||
-        client.company?.toLowerCase().includes(term),
-    );
-  }, [clients, query]);
+  const [busy, setBusy] = useState(false);
 
   const handleNew = () => {
     setEditingClient(null);
@@ -38,99 +42,126 @@ export function ClientsTable({ clients }: { clients: ClientWithCount[] }) {
     setDialogOpen(true);
   };
 
-  const handleDelete = (client: Client) => {
+  const handleDelete = async (client: Client) => {
     const confirmed = window.confirm(
-      `Excluir "${client.name}"? Isso também remove os pedidos e faturas vinculados.`,
+      `Eliminar "${client.name}"? Isto também remove os pedidos e facturas associados.`,
     );
     if (!confirmed) return;
 
-    startTransition(async () => {
+    setBusy(true);
+    try {
       await deleteClient(client.id);
-    });
+    } catch (error) {
+      console.error(error);
+      window.alert("Não foi possível eliminar o cliente.");
+    } finally {
+      setBusy(false);
+    }
   };
+
+  const actionsFor = (client: ClientWithCount): RowAction[] => [
+    { label: "Editar", icon: Pencil, tone: "primary", onClick: () => handleEdit(client) },
+    { label: "Eliminar", icon: Trash2, tone: "danger", disabled: busy, onClick: () => handleDelete(client) },
+  ];
 
   return (
     <div className="rounded-2xl border border-border bg-white shadow-soft">
       <div className="flex flex-col gap-3 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-xs">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Buscar por nome, e-mail ou empresa…"
-            className="pl-9"
-          />
-        </div>
+        <SearchForm q={q} basePath="/admin/clientes" placeholder="Pesquisar por nome, e-mail ou empresa…" />
         <Button variant="teal" onClick={handleNew} className="w-full sm:w-auto">
           <Plus className="h-4 w-4" />
           Novo cliente
         </Button>
       </div>
 
-      {filtered.length === 0 ? (
-        <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
-          {clients.length === 0
-            ? "Nenhum cliente cadastrado ainda."
-            : "Nenhum cliente encontrado para essa busca."}
+      {clients.length === 0 ? (
+        <div className="flex h-40 items-center justify-center px-6 text-center text-sm text-muted-foreground">
+          {q ? "Nenhum cliente encontrado para esta pesquisa." : "Ainda não há clientes registados."}
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/50 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                <th className="px-5 py-3">Cliente</th>
-                <th className="px-5 py-3">Empresa</th>
-                <th className="px-5 py-3">Contato</th>
-                <th className="px-5 py-3">Pedidos</th>
-                <th className="px-5 py-3 text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((client) => (
-                <tr key={client.id} className="border-b border-border last:border-0">
-                  <td className="px-5 py-3.5 font-medium text-navy-700">{client.name}</td>
-                  <td className="px-5 py-3.5 text-navy-600">
-                    {client.company ? (
-                      <span className="inline-flex items-center gap-1.5">
-                        <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
-                        {client.company}
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
+        <>
+          {/* Telemóvel: cartões */}
+          <ul className="divide-y divide-border md:hidden">
+            {clients.map((client) => (
+              <li key={client.id} className="p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-display text-base font-bold text-navy-700">{client.name}</p>
+                    {client.company && (
+                      <p className="mt-0.5 flex items-center gap-1.5 text-sm text-navy-600">
+                        <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <span className="truncate">{client.company}</span>
+                      </p>
                     )}
-                  </td>
-                  <td className="px-5 py-3.5 text-muted-foreground">
-                    <div>{client.email}</div>
-                    {client.phone && <div className="text-xs">{client.phone}</div>}
-                  </td>
-                  <td className="px-5 py-3.5 text-navy-600">{client._count.projects}</td>
-                  <td className="px-5 py-3.5">
-                    <div className="flex justify-end gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => handleEdit(client)}
-                        className="rounded-lg p-2 text-navy-500 transition-colors hover:bg-primary-50 hover:text-primary-600"
-                        aria-label={`Editar ${client.name}`}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(client)}
-                        disabled={isPending}
-                        className="rounded-lg p-2 text-navy-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
-                        aria-label={`Excluir ${client.name}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-primary-50 px-2.5 py-1 text-xs font-semibold text-primary-700">
+                    {client._count.projects} {client._count.projects === 1 ? "pedido" : "pedidos"}
+                  </span>
+                </div>
+                <div className="mt-3 space-y-1.5 text-sm text-muted-foreground">
+                  <p className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 shrink-0" />
+                    <a href={`mailto:${client.email}`} className="truncate hover:text-primary-700">
+                      {client.email}
+                    </a>
+                  </p>
+                  {client.phone && (
+                    <p className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 shrink-0" />
+                      <a href={`tel:${client.phone}`} className="hover:text-primary-700">
+                        {client.phone}
+                      </a>
+                    </p>
+                  )}
+                </div>
+                <CardActions actions={actionsFor(client)} subject={client.name} />
+              </li>
+            ))}
+          </ul>
+
+          {/* Ecrãs médios e grandes: tabela com a coluna de ações fixa */}
+          <div className="hidden overflow-x-auto md:block">
+            <table className="w-full min-w-[720px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted text-xs font-semibold text-muted-foreground">
+                  <th className="px-5 py-3">Cliente</th>
+                  <th className="px-5 py-3">Empresa</th>
+                  <th className="px-5 py-3">Contacto</th>
+                  <th className="px-5 py-3">Pedidos</th>
+                  <th className={STICKY_TH}>Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {clients.map((client) => (
+                  <tr key={client.id} className="group border-b border-border last:border-0 hover:bg-primary-50/40">
+                    <td className="px-5 py-3.5 font-medium text-navy-700">{client.name}</td>
+                    <td className="px-5 py-3.5 text-navy-600">
+                      {client.company ? (
+                        <span className="inline-flex items-center gap-1.5">
+                          <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                          {client.company}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-3.5 text-muted-foreground">
+                      <div>{client.email}</div>
+                      {client.phone && <div className="text-xs">{client.phone}</div>}
+                    </td>
+                    <td className="px-5 py-3.5 text-navy-600">{client._count.projects}</td>
+                    <td className={STICKY_TD}>
+                      <RowActions actions={actionsFor(client)} subject={client.name} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
+
+      <Pagination basePath="/admin/clientes" page={page} totalPages={totalPages} total={total} params={{ q }} />
 
       <ClientFormDialog open={dialogOpen} onOpenChange={setDialogOpen} client={editingClient} />
     </div>

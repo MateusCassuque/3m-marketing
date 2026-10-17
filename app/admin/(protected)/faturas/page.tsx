@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 
+import type { Prisma } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
+import { firstParam, paginate, parsePage } from "@/lib/pagination";
+import { PageHeader } from "@/components/admin/page-header";
 import { InvoicesTable, type InvoiceRow } from "@/components/admin/faturas/invoices-table";
 import type { ProjectOption } from "@/components/admin/faturas/invoice-form-dialog";
 
@@ -11,9 +15,30 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function FaturasPage() {
+export default async function FaturasPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
+  const q = firstParam(params.q).trim();
+
+  const where: Prisma.InvoiceWhereInput = q
+    ? {
+        OR: [
+          { number: { contains: q, mode: "insensitive" } },
+          { project: { title: { contains: q, mode: "insensitive" } } },
+          { project: { client: { name: { contains: q, mode: "insensitive" } } } },
+        ],
+      }
+    : {};
+
+  const total = await prisma.invoice.count({ where });
+  const { page, totalPages, skip, take } = paginate(total, parsePage(params.page));
+
   const [invoices, projects] = await Promise.all([
     prisma.invoice.findMany({
+      where,
       include: {
         project: {
           select: {
@@ -29,6 +54,8 @@ export default async function FaturasPage() {
         }
       },
       orderBy: { issueDate: "desc" },
+      skip,
+      take,
     }),
     prisma.project.findMany({
       include: { client: { select: { name: true } } },
@@ -64,17 +91,16 @@ export default async function FaturasPage() {
   }));
 
   return (
-    <div className="p-6 lg:p-10">
-      <div className="mb-8">
-        <h1 className="font-display text-2xl font-extrabold text-navy-700 sm:text-3xl">
-          Faturas
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Emita e acompanhe as faturas de cada pedido.
-        </p>
-      </div>
-
-      <InvoicesTable invoices={invoiceRows} projects={projectOptions} />
+    <div className="p-5 sm:p-6 lg:p-10">
+      <PageHeader title="Facturas" description="Emita e acompanhe as facturas de cada pedido." />
+      <InvoicesTable
+        invoices={invoiceRows}
+        projects={projectOptions}
+        q={q}
+        page={page}
+        totalPages={totalPages}
+        total={total}
+      />
     </div>
   );
 }

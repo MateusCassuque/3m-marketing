@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Download, Inbox, Search } from "lucide-react";
+import { Download, Inbox, Search } from "lucide-react";
 import type { LeadStatus, Prisma, ServiceInterest } from "@prisma/client";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { SERVICE_LABELS, STATUS_LABELS, STATUS_ORDER } from "@/lib/lead-labels";
 import { PageHeader } from "@/components/admin/page-header";
+import { Pagination } from "@/components/admin/pagination";
+import { PAGE_SIZE } from "@/lib/pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -20,7 +22,6 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-const PAGE_SIZE = 15;
 const PERIOD_OPTIONS = [
   { value: "", label: "Sempre" },
   { value: "7", label: "Últimos 7 dias" },
@@ -169,29 +170,16 @@ export default async function AdminLeadsPage({ searchParams }: { searchParams: P
 
           <LeadsManager leads={data.leads} canEdit={canEdit} />
 
-          {totalPages > 1 && (
-            <nav className="flex items-center justify-between text-sm" aria-label="Paginação">
-              <p className="text-muted-foreground">
-                Página {page} de {totalPages} · {data.total} leads
-              </p>
-              <div className="flex gap-2">
-                {page > 1 && (
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/admin/leads?${buildQuery({ page: String(page - 1) })}`}>
-                      <ChevronLeft className="h-4 w-4" /> Anterior
-                    </Link>
-                  </Button>
-                )}
-                {page < totalPages && (
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/admin/leads?${buildQuery({ page: String(page + 1) })}`}>
-                      Seguinte <ChevronRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                )}
-              </div>
-            </nav>
-          )}
+          <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-soft">
+            <Pagination
+              basePath="/admin/leads"
+              page={page}
+              totalPages={totalPages}
+              total={data.total}
+              params={{ q, estado, servico, periodo }}
+              className="border-t-0"
+            />
+          </div>
         </div>
       )}
     </div>
