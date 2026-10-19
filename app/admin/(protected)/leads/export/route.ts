@@ -4,6 +4,7 @@ import type { Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { SERVICE_LABELS, STATUS_LABELS } from "@/lib/lead-labels";
+import { hasKey } from "@/lib/pagination";
 
 export const dynamic = "force-dynamic";
 
@@ -27,8 +28,8 @@ export async function GET(request: Request) {
   const days = Number(searchParams.get("periodo"));
 
   const where: Prisma.LeadWhereInput = {};
-  if (status && status in STATUS_LABELS) where.status = status as keyof typeof STATUS_LABELS;
-  if (service && service in SERVICE_LABELS) where.service = service as keyof typeof SERVICE_LABELS;
+  if (status && hasKey(STATUS_LABELS, status)) where.status = status as keyof typeof STATUS_LABELS;
+  if (service && hasKey(SERVICE_LABELS, service)) where.service = service as keyof typeof SERVICE_LABELS;
   if (days > 0) where.createdAt = { gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000) };
   if (q) {
     where.OR = [

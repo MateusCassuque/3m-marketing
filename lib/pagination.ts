@@ -17,3 +17,8 @@ export function paginate(total: number, requested: number) {
 export function firstParam(raw: string | string[] | undefined): string {
   return (Array.isArray(raw) ? raw[0] : raw) ?? "";
 }
+
+/** `key in obj` também é verdadeiro para "constructor", "toString"… — isto só aceita chaves próprias. */
+export function hasKey<T extends object>(obj: T, key: string): key is Extract<keyof T, string> {
+  return Object.prototype.hasOwnProperty.call(obj, key);
+}

@@ -49,6 +49,14 @@ Financeiro · Utilizadores (só administradores).
 
 Perfis: **ADMIN** (tudo) e **EDITOR** (só consulta).
 
+## Facturas
+
+- O número (`FAT-0001`, `FAT-0002`…) vem de um **contador** (`InvoiceCounter`) que só avança. Eliminar uma factura não
+  "devolve" o número, por isso nunca há colisões nem números repetidos (os saltos na numeração são intencionais).
+  A migração `20261017120000_invoice_counter` arranca o contador no maior número já emitido.
+- Cada cliente (`/admin/clientes/[id]`) e cada pedido (`/admin/pedidos/[id]`) tem uma página de resumo com as respectivas facturas.
+- Filtros por estado: facturas (pendentes, vencidas, pagas, canceladas) e pedidos (por fase).
+
 ## Segurança — o que mudou
 
 - Removido o endpoint público `/api/admin/register` (criava/repunha uma conta ADMIN com senha fixa no código).

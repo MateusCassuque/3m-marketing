@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { Client } from "@prisma/client";
 import { Building2, Mail, Pencil, Phone, Plus, Trash2 } from "lucide-react";
 
@@ -86,7 +87,9 @@ export function ClientsTable({ clients, q, page, totalPages, total }: ClientsTab
               <li key={client.id} className="p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate font-display text-base font-bold text-navy-700">{client.name}</p>
+                    <Link href={`/admin/clientes/${client.id}`} className="block truncate font-display text-base font-bold text-navy-700 hover:text-primary-700 hover:underline">
+                      {client.name}
+                    </Link>
                     {client.company && (
                       <p className="mt-0.5 flex items-center gap-1.5 text-sm text-navy-600">
                         <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -134,7 +137,11 @@ export function ClientsTable({ clients, q, page, totalPages, total }: ClientsTab
               <tbody>
                 {clients.map((client) => (
                   <tr key={client.id} className="group border-b border-border last:border-0 hover:bg-primary-50/40">
-                    <td className="px-5 py-3.5 font-medium text-navy-700">{client.name}</td>
+                    <td className="px-5 py-3.5 font-medium">
+                      <Link href={`/admin/clientes/${client.id}`} className="text-navy-700 hover:text-primary-700 hover:underline">
+                        {client.name}
+                      </Link>
+                    </td>
                     <td className="px-5 py-3.5 text-navy-600">
                       {client.company ? (
                         <span className="inline-flex items-center gap-1.5">

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { CalendarClock, Eye, Pencil, Plus, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -36,19 +37,20 @@ export type InvoiceRow = InvoiceFormData & {
 }
 
 function isOverdue(invoice: InvoiceRow) {
-  return invoice.status === "PENDENTE" && new Date(invoice.dueDate) < new Date()
+  return invoice.status === "VENCIDA" || (invoice.status === "PENDENTE" && new Date(invoice.dueDate) < new Date())
 }
 
 interface InvoicesTableProps {
   invoices: InvoiceRow[]
   projects: ProjectOption[]
   q: string
+  estado: string
   page: number
   totalPages: number
   total: number
 }
 
-export function InvoicesTable({ invoices, projects, q, page, totalPages, total }: InvoicesTableProps) {
+export function InvoicesTable({ invoices, projects, q, estado, page, totalPages, total }: InvoicesTableProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingInvoice, setEditingInvoice] = useState<InvoiceRow | null>(null)
   const [viewDialogOpen, setViewDialogOpen] = useState(false)
@@ -100,7 +102,7 @@ export function InvoicesTable({ invoices, projects, q, page, totalPages, total }
   return (
     <div className="rounded-2xl border border-border bg-white shadow-soft">
       <div className="flex flex-col gap-3 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
-        <SearchForm q={q} basePath="/admin/faturas" placeholder="Pesquisar por número, pedido ou cliente…" />
+        <SearchForm q={q} basePath="/admin/faturas" hidden={{ estado }} placeholder="Pesquisar por número, pedido ou cliente…" />
         <Button variant="teal" onClick={handleNew} className="w-full sm:w-auto">
           <Plus className="h-4 w-4" />
           Nova factura
@@ -109,7 +111,7 @@ export function InvoicesTable({ invoices, projects, q, page, totalPages, total }
 
       {invoices.length === 0 ? (
         <div className="flex h-40 items-center justify-center px-6 text-center text-sm text-muted-foreground">
-          {q ? "Nenhuma factura encontrada para esta pesquisa." : "Ainda não há facturas registadas."}
+          {q || estado ? "Nenhuma factura encontrada com estes filtros." : "Ainda não há facturas registadas."}
         </div>
       ) : (
         <>
@@ -120,7 +122,9 @@ export function InvoicesTable({ invoices, projects, q, page, totalPages, total }
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-display text-base font-bold text-navy-700">{invoice.number}</p>
-                    <p className="mt-0.5 truncate text-sm text-navy-600">{invoice.project.title}</p>
+                    <Link href={`/admin/pedidos/${invoice.projectId}`} className="mt-0.5 block truncate text-sm text-primary-700 hover:underline">
+                      {invoice.project.title}
+                    </Link>
                     <p className="truncate text-xs text-muted-foreground">{invoice.project.client.name}</p>
                   </div>
                   <p className="shrink-0 font-display text-base font-bold text-navy-700">
@@ -157,7 +161,9 @@ export function InvoicesTable({ invoices, projects, q, page, totalPages, total }
                   <tr key={invoice.id} className="group border-b border-border last:border-0 hover:bg-primary-50/40">
                     <td className="px-5 py-3.5 font-medium text-navy-700">{invoice.number}</td>
                     <td className="px-5 py-3.5 text-navy-600">
-                      <div>{invoice.project.title}</div>
+                      <Link href={`/admin/pedidos/${invoice.projectId}`} className="block hover:text-primary-700 hover:underline">
+                        {invoice.project.title}
+                      </Link>
                       <div className="text-xs text-muted-foreground">{invoice.project.client.name}</div>
                     </td>
                     <td className="px-5 py-3.5 font-semibold text-navy-700">{formatCurrency(invoice.amount)}</td>
@@ -174,7 +180,7 @@ export function InvoicesTable({ invoices, projects, q, page, totalPages, total }
         </>
       )}
 
-      <Pagination basePath="/admin/faturas" page={page} totalPages={totalPages} total={total} params={{ q }} />
+      <Pagination basePath="/admin/faturas" page={page} totalPages={totalPages} total={total} params={{ q, estado }} />
 
       <InvoiceFormDialog
         open={dialogOpen}

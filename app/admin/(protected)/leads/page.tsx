@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { SERVICE_LABELS, STATUS_LABELS, STATUS_ORDER } from "@/lib/lead-labels";
 import { PageHeader } from "@/components/admin/page-header";
 import { Pagination } from "@/components/admin/pagination";
-import { PAGE_SIZE } from "@/lib/pagination";
+import { PAGE_SIZE, hasKey } from "@/lib/pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -44,8 +44,8 @@ export default async function AdminLeadsPage({ searchParams }: { searchParams: P
   const canEdit = session?.user?.role === "ADMIN";
 
   const where: Prisma.LeadWhereInput = {};
-  if (estado in STATUS_LABELS) where.status = estado as LeadStatus;
-  if (servico in SERVICE_LABELS) where.service = servico as ServiceInterest;
+  if (hasKey(STATUS_LABELS, estado)) where.status = estado as LeadStatus;
+  if (hasKey(SERVICE_LABELS, servico)) where.service = servico as ServiceInterest;
   if (Number(periodo) > 0) where.createdAt = { gte: new Date(Date.now() - Number(periodo) * 24 * 60 * 60 * 1000) };
   if (q) {
     where.OR = [

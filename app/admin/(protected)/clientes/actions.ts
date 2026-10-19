@@ -27,6 +27,8 @@ export async function createClient(values: ClientValues) {
   });
 
   revalidatePath("/admin/clientes");
+  revalidatePath("/admin/clientes/[id]", "page");
+  revalidatePath("/admin/pedidos/[id]", "page");
 }
 
 export async function updateClient(id: string, values: ClientValues) {
@@ -47,10 +49,14 @@ export async function updateClient(id: string, values: ClientValues) {
   });
 
   revalidatePath("/admin/clientes");
+  revalidatePath("/admin/clientes/[id]", "page");
+  revalidatePath("/admin/pedidos/[id]", "page");
 }
 
 export async function deleteClient(id: string) {
   await requireAdmin();
   await prisma.client.delete({ where: { id } });
   revalidatePath("/admin/clientes");
+  revalidatePath("/admin/clientes/[id]", "page");
+  revalidatePath("/admin/pedidos/[id]", "page");
 }

@@ -27,6 +27,8 @@ export async function createProject(values: ProjectValues) {
   });
 
   revalidatePath("/admin/pedidos");
+  revalidatePath("/admin/clientes/[id]", "page");
+  revalidatePath("/admin/pedidos/[id]", "page");
   revalidatePath("/admin/financeiro");
 }
 
@@ -54,6 +56,8 @@ export async function updateProject(id: string, values: ProjectValues) {
   });
 
   revalidatePath("/admin/pedidos");
+  revalidatePath("/admin/clientes/[id]", "page");
+  revalidatePath("/admin/pedidos/[id]", "page");
   revalidatePath("/admin/financeiro");
 }
 
@@ -62,5 +66,7 @@ export async function deleteProject(id: string) {
   // onDelete: Cascade no schema remove também as faturas desse pedido.
   await prisma.project.delete({ where: { id } });
   revalidatePath("/admin/pedidos");
+  revalidatePath("/admin/clientes/[id]", "page");
+  revalidatePath("/admin/pedidos/[id]", "page");
   revalidatePath("/admin/financeiro");
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { Client } from "@prisma/client";
 import { CalendarClock, Pencil, Plus, Trash2, User } from "lucide-react";
 
@@ -35,12 +36,13 @@ interface ProjectsTableProps {
   projects: ProjectRow[];
   clients: Client[];
   q: string;
+  estado: string;
   page: number;
   totalPages: number;
   total: number;
 }
 
-export function ProjectsTable({ projects, clients, q, page, totalPages, total }: ProjectsTableProps) {
+export function ProjectsTable({ projects, clients, q, estado, page, totalPages, total }: ProjectsTableProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<ProjectRow | null>(null);
   const [busy, setBusy] = useState(false);
@@ -80,7 +82,7 @@ export function ProjectsTable({ projects, clients, q, page, totalPages, total }:
   return (
     <div className="rounded-2xl border border-border bg-white shadow-soft">
       <div className="flex flex-col gap-3 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
-        <SearchForm q={q} basePath="/admin/pedidos" placeholder="Pesquisar por título ou cliente…" />
+        <SearchForm q={q} basePath="/admin/pedidos" hidden={{ estado }} placeholder="Pesquisar por título ou cliente…" />
         <Button variant="teal" onClick={handleNew} className="w-full sm:w-auto">
           <Plus className="h-4 w-4" />
           Novo pedido
@@ -89,7 +91,7 @@ export function ProjectsTable({ projects, clients, q, page, totalPages, total }:
 
       {projects.length === 0 ? (
         <div className="flex h-40 items-center justify-center px-6 text-center text-sm text-muted-foreground">
-          {q ? "Nenhum pedido encontrado para esta pesquisa." : "Ainda não há pedidos registados."}
+          {q || estado ? "Nenhum pedido encontrado com estes filtros." : "Ainda não há pedidos registados."}
         </div>
       ) : (
         <>
@@ -98,7 +100,9 @@ export function ProjectsTable({ projects, clients, q, page, totalPages, total }:
             {projects.map((project) => (
               <li key={project.id} className="p-5">
                 <div className="flex items-start justify-between gap-3">
-                  <p className="font-display text-base font-bold text-navy-700">{project.title}</p>
+                  <Link href={`/admin/pedidos/${project.id}`} className="font-display text-base font-bold text-navy-700 hover:text-primary-700 hover:underline">
+                    {project.title}
+                  </Link>
                   <p className="shrink-0 font-display text-base font-bold text-navy-700">
                     {formatCurrency(project.value)}
                   </p>
@@ -140,8 +144,16 @@ export function ProjectsTable({ projects, clients, q, page, totalPages, total }:
               <tbody>
                 {projects.map((project) => (
                   <tr key={project.id} className="group border-b border-border last:border-0 hover:bg-primary-50/40">
-                    <td className="px-5 py-3.5 font-medium text-navy-700">{project.title}</td>
-                    <td className="px-5 py-3.5 text-navy-600">{project.client.name}</td>
+                    <td className="px-5 py-3.5 font-medium">
+                      <Link href={`/admin/pedidos/${project.id}`} className="text-navy-700 hover:text-primary-700 hover:underline">
+                        {project.title}
+                      </Link>
+                    </td>
+                    <td className="px-5 py-3.5 text-navy-600">
+                      <Link href={`/admin/clientes/${project.clientId}`} className="hover:text-primary-700 hover:underline">
+                        {project.client.name}
+                      </Link>
+                    </td>
                     <td className="px-5 py-3.5 text-muted-foreground">{SERVICE_LABELS[project.service]}</td>
                     <td className="px-5 py-3.5">
                       <Badge variant={PROJECT_STATUS_BADGE[project.status]}>
@@ -163,7 +175,7 @@ export function ProjectsTable({ projects, clients, q, page, totalPages, total }:
         </>
       )}
 
-      <Pagination basePath="/admin/pedidos" page={page} totalPages={totalPages} total={total} params={{ q }} />
+      <Pagination basePath="/admin/pedidos" page={page} totalPages={totalPages} total={total} params={{ q, estado }} />
 
       <ProjectFormDialog
         open={dialogOpen}

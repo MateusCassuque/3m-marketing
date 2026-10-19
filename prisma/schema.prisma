@@ -135,6 +135,13 @@ enum InvoiceStatus {
 // via invoice.project.client — uma única fonte de verdade para os números
 // que alimentam a página /admin/financeiro (nada é duplicado/"sincronizado"
 // manualmente, é a mesma tabela consultada de formas diferentes).
+// Contador sequencial das facturas. O número nunca é reutilizado, mesmo que
+// uma factura seja eliminada (a numeração fiscal não deve ter números repetidos).
+model InvoiceCounter {
+  id         Int @id
+  lastNumber Int @default(0)
+}
+
 model Invoice {
   id            String        @id @default(cuid())
   number        String        @unique

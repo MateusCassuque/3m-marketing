@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-import type { Prisma } from "@prisma/client";
+import type { Prisma, ProjectStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
-import { firstParam, paginate, parsePage } from "@/lib/pagination";
+import { firstParam, hasKey, paginate, parsePage } from "@/lib/pagination";
 import { PageHeader } from "@/components/admin/page-header";
+import { StatusChips } from "@/components/admin/status-chips";
+import { PROJECT_STATUS_LABELS } from "@/lib/project-labels";
 import { ProjectsTable, type ProjectRow } from "@/components/admin/pedidos/projects-table";
 
 export const metadata: Metadata = {
@@ -21,19 +23,25 @@ export default async function PedidosPage({
   const params = await searchParams;
   const q = firstParam(params.q).trim();
 
-  const where: Prisma.ProjectWhereInput = q
-    ? {
-        OR: [
-          { title: { contains: q, mode: "insensitive" } },
-          { client: { name: { contains: q, mode: "insensitive" } } },
-        ],
-      }
-    : {};
+  const rawEstado = firstParam(params.estado);
+  const estado = hasKey(PROJECT_STATUS_LABELS, rawEstado) ? (rawEstado as ProjectStatus) : "";
+
+  const where: Prisma.ProjectWhereInput = {
+    ...(estado ? { status: estado } : {}),
+    ...(q
+      ? {
+          OR: [
+            { title: { contains: q, mode: "insensitive" } },
+            { client: { name: { contains: q, mode: "insensitive" } } },
+          ],
+        }
+      : {}),
+  };
 
   const total = await prisma.project.count({ where });
   const { page, totalPages, skip, take } = paginate(total, parsePage(params.page));
 
-  const [projects, clients] = await Promise.all([
+  const [projects, clients, grouped] = await Promise.all([
     prisma.project.findMany({
       where,
       include: { client: { select: { name: true } } },
@@ -42,7 +50,18 @@ export default async function PedidosPage({
       take,
     }),
     prisma.client.findMany({ orderBy: { name: "asc" } }),
+    prisma.project.groupBy({ by: ["status"], _count: { _all: true } }),
   ]);
+
+  const counts = new Map<string, number>(grouped.map((g) => [g.status, g._count._all]));
+  const chips = [
+    { value: "", label: "Todos", count: grouped.reduce((sum, g) => sum + g._count._all, 0) },
+    ...(Object.keys(PROJECT_STATUS_LABELS) as ProjectStatus[]).map((status) => ({
+      value: status,
+      label: PROJECT_STATUS_LABELS[status],
+      count: counts.get(status) ?? 0,
+    })),
+  ];
 
   const rows: ProjectRow[] = projects.map((project) => ({
     id: project.id,
@@ -61,7 +80,8 @@ export default async function PedidosPage({
   return (
     <div className="p-5 sm:p-6 lg:p-10">
       <PageHeader title="Pedidos" description="Acompanhe os projectos em curso e o valor de cada pedido." />
-      <ProjectsTable projects={rows} clients={clients} q={q} page={page} totalPages={totalPages} total={total} />
+      <StatusChips basePath="/admin/pedidos" chips={chips} current={estado} params={{ q }} />
+      <ProjectsTable projects={rows} clients={clients} q={q} estado={estado} page={page} totalPages={totalPages} total={total} />
     </div>
   );
 }

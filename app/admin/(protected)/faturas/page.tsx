@@ -3,8 +3,9 @@ import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
-import { firstParam, paginate, parsePage } from "@/lib/pagination";
+import { firstParam, hasKey, paginate, parsePage } from "@/lib/pagination";
 import { PageHeader } from "@/components/admin/page-header";
+import { StatusChips } from "@/components/admin/status-chips";
 import { InvoicesTable, type InvoiceRow } from "@/components/admin/faturas/invoices-table";
 import type { ProjectOption } from "@/components/admin/faturas/invoice-form-dialog";
 
@@ -23,7 +24,22 @@ export default async function FaturasPage({
   const params = await searchParams;
   const q = firstParam(params.q).trim();
 
-  const where: Prisma.InvoiceWhereInput = q
+  // Filtros por estado. "Vencidas" inclui as pendentes cuja data de vencimento já passou,
+  // e "Pendentes" só as que ainda estão dentro do prazo — assim os números não se sobrepõem.
+  const now = new Date();
+  const ESTADOS: Record<string, { label: string; where: Prisma.InvoiceWhereInput }> = {
+    pendente: { label: "Pendentes", where: { status: "PENDENTE", dueDate: { gte: now } } },
+    vencida: {
+      label: "Vencidas",
+      where: { OR: [{ status: "VENCIDA" }, { status: "PENDENTE", dueDate: { lt: now } }] },
+    },
+    paga: { label: "Pagas", where: { status: "PAGA" } },
+    cancelada: { label: "Canceladas", where: { status: "CANCELADA" } },
+  };
+  const rawEstado = firstParam(params.estado);
+  const estado = hasKey(ESTADOS, rawEstado) ? rawEstado : "";
+
+  const searchWhere: Prisma.InvoiceWhereInput = q
     ? {
         OR: [
           { number: { contains: q, mode: "insensitive" } },
@@ -32,6 +48,19 @@ export default async function FaturasPage({
         ],
       }
     : {};
+
+  const where: Prisma.InvoiceWhereInput = {
+    AND: [searchWhere, estado ? ESTADOS[estado].where : {}],
+  };
+
+  const [totalAll, ...stateCounts] = await Promise.all([
+    prisma.invoice.count(),
+    ...Object.values(ESTADOS).map((e) => prisma.invoice.count({ where: e.where })),
+  ]);
+  const chips = [
+    { value: "", label: "Todas", count: totalAll },
+    ...Object.entries(ESTADOS).map(([value, e], i) => ({ value, label: e.label, count: stateCounts[i] })),
+  ];
 
   const total = await prisma.invoice.count({ where });
   const { page, totalPages, skip, take } = paginate(total, parsePage(params.page));
@@ -93,10 +122,12 @@ export default async function FaturasPage({
   return (
     <div className="p-5 sm:p-6 lg:p-10">
       <PageHeader title="Facturas" description="Emita e acompanhe as facturas de cada pedido." />
+      <StatusChips basePath="/admin/faturas" chips={chips} current={estado} params={{ q }} />
       <InvoicesTable
         invoices={invoiceRows}
         projects={projectOptions}
         q={q}
+        estado={estado}
         page={page}
         totalPages={totalPages}
         total={total}
