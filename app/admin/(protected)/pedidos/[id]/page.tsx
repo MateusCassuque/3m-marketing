@@ -79,7 +79,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         />
       </PageHeader>
 
-      <div className="grid sm:grid-cols-2 gap-4 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         <Stat label="Valor do pedido" value={formatCurrency(value)} />
         <Stat label="Facturado" value={formatCurrency(totals.invoiced)} />
         <Stat label="Recebido" value={formatCurrency(totals.received)} tone="success" />

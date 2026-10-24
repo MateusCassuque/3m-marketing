@@ -57,6 +57,20 @@ Perfis: **ADMIN** (tudo) e **EDITOR** (só consulta).
 - Cada cliente (`/admin/clientes/[id]`) e cada pedido (`/admin/pedidos/[id]`) tem uma página de resumo com as respectivas facturas.
 - Filtros por estado: facturas (pendentes, vencidas, pagas, canceladas) e pedidos (por fase).
 
+## Notificações
+
+Sino no topo do painel (como no Facebook/YouTube), com contador, separadores "Todas / Não lidas", "marcar tudo como lido"
+e uma página completa em `/admin/notificacoes`. São calculadas a partir dos dados (`lib/notifications.ts`):
+
+- **Cobranças por fazer** — facturas vencidas;
+- **Facturas pendentes** — ainda dentro do prazo, com os dias que faltam;
+- **Pedidos atrasados** — entrega prevista ultrapassada e pedido não concluído.
+
+Desaparecem sozinhas quando a factura é paga ou o pedido concluído. O "lido" é guardado por utilizador (`NotificationRead`).
+Além do sino: contador no título do separador, **alertas do sistema** (barra de tarefas / centro de notificações, via
+`public/sw.js`, activados no botão "Activar" do painel) e emblema no ícone quando o painel está instalado como app.
+Os alertas só chegam com o painel aberto num separador; para avisar com tudo fechado seria preciso Web Push.
+
 ## Segurança — o que mudou
 
 - Removido o endpoint público `/api/admin/register` (criava/repunha uma conta ADMIN com senha fixa no código).

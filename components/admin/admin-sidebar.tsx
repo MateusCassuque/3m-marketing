@@ -1,14 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Briefcase,
   ExternalLink,
+  Bell,
   Inbox,
   LayoutDashboard,
-  Menu,
   Receipt,
   ShieldCheck,
   Users,
@@ -24,7 +23,10 @@ import { cn } from "@/lib/utils";
 const NAV_GROUPS = [
   {
     title: "Visão geral",
-    items: [{ label: "Dashboard", href: "/admin", icon: LayoutDashboard }],
+    items: [
+      { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
+      { label: "Notificações", href: "/admin/notificacoes", icon: Bell },
+    ],
   },
   {
     title: "Comercial",
@@ -47,6 +49,9 @@ interface AdminSidebarProps {
   userName: string;
   userEmail: string;
   isAdmin: boolean;
+  /** Gaveta aberta (só mobile) — o estado vive no AdminShell. */
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 function initials(name: string) {
@@ -58,9 +63,11 @@ function initials(name: string) {
     .join("");
 }
 
-export function AdminSidebar({ userName, userEmail, isAdmin }: AdminSidebarProps) {
+export function AdminSidebar({ userName, userEmail, isAdmin, isOpen, onClose }: AdminSidebarProps) {
   const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(false);
+  const setIsOpen = (value: boolean) => {
+    if (!value) onClose();
+  };
 
   const groups = isAdmin
     ? [
@@ -74,19 +81,6 @@ export function AdminSidebar({ userName, userEmail, isAdmin }: AdminSidebarProps
 
   return (
     <>
-      {/* Barra superior — só no mobile */}
-      <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-navy-800 bg-navy-900 px-4 md:hidden">
-        <Logo variant="light" className="h-7" />
-        <button
-          type="button"
-          onClick={() => setIsOpen(true)}
-          className="flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10"
-          aria-label="Abrir menu"
-        >
-          <Menu className="h-5 w-5" strokeWidth={1.9} />
-        </button>
-      </div>
-
       {isOpen && (
         <div
           className="fixed inset-0 z-40 bg-navy-950/60 backdrop-blur-sm md:hidden"

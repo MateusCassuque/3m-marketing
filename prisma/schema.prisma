@@ -65,6 +65,23 @@ model Admin {
   role         Role     @default(ADMIN)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  notificationReads NotificationRead[]
+}
+
+// Notificações lidas, por utilizador. As notificações em si são calculadas a partir
+// das facturas e pedidos (ver lib/notifications.ts); aqui só se guarda "já li".
+// `key` é estável, p. ex. "invoice-overdue:<id da factura>".
+model NotificationRead {
+  id      String   @id @default(cuid())
+  adminId String
+  key     String
+  readAt  DateTime @default(now())
+
+  admin Admin @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@unique([adminId, key])
+  @@index([adminId])
 }
 
 // ---------- CRM: clientes, pedidos/projetos e faturas ----------
