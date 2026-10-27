@@ -24,9 +24,7 @@ export default function LoginPage() {
       <aside className="relative isolate hidden overflow-hidden bg-hero-night p-12 text-white lg:flex lg:flex-col lg:justify-between">
         <CubesBackdrop className="absolute inset-0 -z-10" />
         <div className="bg-grid-lines pointer-events-none absolute inset-0 -z-10" aria-hidden="true" />
-        <div className="flex items-center gap-4">
-          <Logo variant="light" className="h-16" />
-        </div>
+        <Logo variant="light" className="h-10" />
         <div>
           <h2 className="max-w-md text-balance font-display text-4xl font-bold leading-tight">
             Tudo o que a Kodeza · 3M gere, num painel só.
@@ -56,7 +54,7 @@ export default function LoginPage() {
           <Logo className="h-9 lg:hidden" />
           <h1 className="mt-6 font-display text-3xl font-bold text-navy-700 lg:mt-0">Entrar no painel</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Use a conta que lhe foi atribuída.
+            Use a conta que lhe foi atribuída para gerir leads, clientes, pedidos e facturas.
           </p>
           <div className="mt-8">
             <Suspense fallback={null}>

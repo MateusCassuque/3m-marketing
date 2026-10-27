@@ -53,12 +53,22 @@ export function InvoiceList({
                   <CalendarClock className="h-3.5 w-3.5" />
                   Vence {formatDateNotTime(invoice.dueDate)}
                 </p>
+                {invoice.status !== "CANCELADA" && invoice.remaining !== null && (
+                  <p className="mt-0.5 text-xs font-medium">
+                    {invoice.installment !== null && <span className="text-muted-foreground">{invoice.installment}.ª factura · </span>}
+                    {invoice.remaining > 0 ? (
+                      <span className="text-accent-700">Em falta {formatCurrency(invoice.remaining)}</span>
+                    ) : (
+                      <span className="text-emerald-600">Nada em falta</span>
+                    )}
+                  </p>
+                )}
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <Badge variant={late ? "destructive" : INVOICE_STATUS_BADGE[invoice.status]}>
                   {late ? "Vencida" : INVOICE_STATUS_LABELS[invoice.status]}
                 </Badge>
-                <span className="text-center font-display font-bold text-navy-700">
+                <span className="text-right font-display font-bold text-navy-700">
                   {formatCurrency(invoice.amount)}
                 </span>
                 <Button variant="outline" size="sm" onClick={() => setViewing(invoice)} aria-label={`Ver factura ${invoice.number}`}>

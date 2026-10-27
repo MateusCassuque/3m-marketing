@@ -140,6 +140,32 @@ export function generateInvoicePdf(invoice: InvoiceRow) {
     doc.setTextColor(20, 20, 20)
     doc.text(`Total: ${formatAOA(total)}`, rightX, totalsY + 14, { align: "right" })
 
+    // --- Controlo de parcelas (à esquerda dos totais) ---
+    if (invoice.projectTotal !== null && invoice.status !== "CANCELADA") {
+        const boxY = totalsY - 4
+        doc.setFont("helvetica", "bold")
+        doc.setFontSize(9.5)
+        doc.setTextColor(20, 20, 20)
+        doc.text(`${invoice.installment ?? 1}.ª factura do pedido`, marginX, boxY)
+
+        doc.setFont("helvetica", "normal")
+        doc.setFontSize(9)
+        doc.setTextColor(80, 80, 80)
+        doc.text(`Total do pedido: ${formatAOA(invoice.projectTotal)}`, marginX, boxY + 6)
+        doc.text(`Já facturado antes: ${formatAOA(invoice.previouslyInvoiced ?? 0)}`, marginX, boxY + 11)
+        doc.text(`Valor desta factura: ${formatAOA(invoice.amount)}`, marginX, boxY + 16)
+
+        doc.setFont("helvetica", "bold")
+        doc.setTextColor(20, 20, 20)
+        doc.text(
+            (invoice.remaining ?? 0) > 0
+                ? `Valor em falta: ${formatAOA(invoice.remaining ?? 0)}`
+                : "Valor em falta: nada em falta",
+            marginX,
+            boxY + 22,
+        )
+    }
+
     doc.setFontSize(9)
     doc.text(invoice.paymentMethod || '', marginX, 269)
 

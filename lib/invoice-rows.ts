@@ -20,6 +20,12 @@ export function toInvoiceRow(invoice: InvoiceWithRelations): InvoiceRow {
     dueDate: invoice.dueDate,
     paymentMethod: invoice.paymentMethod,
     notes: invoice.notes,
+    settlesProject: invoice.settlesProject,
+    createdAt: invoice.createdAt,
+    installment: invoice.installment,
+    projectTotal: invoice.projectTotal === null ? null : Number(invoice.projectTotal),
+    previouslyInvoiced: invoice.previouslyInvoiced === null ? null : Number(invoice.previouslyInvoiced),
+    remaining: invoice.remaining === null ? null : Number(invoice.remaining),
     project: {
       title: invoice.project.title,
       client: {

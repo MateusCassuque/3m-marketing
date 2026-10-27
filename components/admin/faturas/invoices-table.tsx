@@ -26,6 +26,11 @@ import { formatCurrency, formatDateNotTime } from "@/lib/utils"
 import { InvoiceViewDialog } from "./invoice-view-dialog"
 
 export type InvoiceRow = InvoiceFormData & {
+  /** Controlo de parcelas (null em facturas antigas ainda sem cálculo). */
+  installment: number | null
+  projectTotal: number | null
+  previouslyInvoiced: number | null
+  remaining: number | null
   project: {
     title: string, client: {
       name: string,
@@ -34,6 +39,29 @@ export type InvoiceRow = InvoiceFormData & {
       telefone: string
     }
   }
+}
+
+/** "Em falta" de uma factura: valor ainda por facturar do pedido, ou "nada em falta". */
+export function RemainingInfo({ invoice, compact = false }: { invoice: InvoiceRow; compact?: boolean }) {
+  if (invoice.status === "CANCELADA" || invoice.remaining === null) {
+    return <span className="text-muted-foreground">—</span>
+  }
+
+  const parcel =
+    invoice.installment !== null && (invoice.installment > 1 || invoice.remaining > 0)
+      ? `${invoice.installment}.ª parcela`
+      : null
+
+  return (
+    <div className={compact ? "flex flex-wrap items-center gap-x-2 gap-y-0.5" : undefined}>
+      {invoice.remaining > 0 ? (
+        <span className="font-semibold text-accent-700">Em falta {formatCurrency(invoice.remaining)}</span>
+      ) : (
+        <span className="font-semibold text-emerald-600">Nada em falta</span>
+      )}
+      {parcel && <span className="block text-xs text-muted-foreground">{parcel}{invoice.projectTotal !== null ? ` de ${formatCurrency(invoice.projectTotal)}` : ""}</span>}
+    </div>
+  )
 }
 
 function isOverdue(invoice: InvoiceRow) {
@@ -131,6 +159,9 @@ export function InvoicesTable({ invoices, projects, q, estado, page, totalPages,
                     {formatCurrency(invoice.amount)}
                   </p>
                 </div>
+                <div className="mt-3 text-sm">
+                  <RemainingInfo invoice={invoice} />
+                </div>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   {statusBadge(invoice)}
                   <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
@@ -145,12 +176,13 @@ export function InvoicesTable({ invoices, projects, q, estado, page, totalPages,
 
           {/* Ecrãs médios e grandes: tabela com a coluna de ações fixa */}
           <div className="hidden overflow-x-auto md:block">
-            <table className="w-full min-w-[860px] text-left text-sm">
+            <table className="w-full min-w-[1000px] text-left text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted text-xs font-semibold text-muted-foreground">
                   <th className="px-5 py-3">Factura</th>
                   <th className="px-5 py-3">Pedido / Cliente</th>
                   <th className="px-5 py-3">Valor</th>
+                  <th className="px-5 py-3">Em falta</th>
                   <th className="px-5 py-3">Estado</th>
                   <th className="px-5 py-3">Vencimento</th>
                   <th className={STICKY_TH}>Ações</th>
@@ -167,6 +199,9 @@ export function InvoicesTable({ invoices, projects, q, estado, page, totalPages,
                       <div className="text-xs text-muted-foreground">{invoice.project.client.name}</div>
                     </td>
                     <td className="px-5 py-3.5 font-semibold text-navy-700">{formatCurrency(invoice.amount)}</td>
+                    <td className="px-5 py-3.5">
+                      <RemainingInfo invoice={invoice} />
+                    </td>
                     <td className="px-5 py-3.5">{statusBadge(invoice)}</td>
                     <td className="px-5 py-3.5 text-muted-foreground">{formatDateNotTime(invoice.dueDate)}</td>
                     <td className={STICKY_TD}>

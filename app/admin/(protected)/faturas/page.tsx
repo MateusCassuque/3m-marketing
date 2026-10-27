@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { toInvoiceRow } from "@/lib/invoice-rows";
 import { firstParam, hasKey, paginate, parsePage } from "@/lib/pagination";
 import { PageHeader } from "@/components/admin/page-header";
 import { StatusChips } from "@/components/admin/status-chips";
@@ -87,36 +88,30 @@ export default async function FaturasPage({
       take,
     }),
     prisma.project.findMany({
-      include: { client: { select: { name: true } } },
+      include: {
+        client: { select: { name: true } },
+        invoices: {
+          where: { status: { not: "CANCELADA" } },
+          select: { id: true, amount: true, createdAt: true },
+          orderBy: { createdAt: "asc" },
+        },
+      },
       orderBy: { title: "asc" },
     }),
   ]);
 
-  const invoiceRows: InvoiceRow[] = invoices.map((invoice) => ({
-    id: invoice.id,
-    number: invoice.number,
-    projectId: invoice.projectId,
-    amount: Number(invoice.amount),
-    status: invoice.status,
-    issueDate: invoice.issueDate,
-    dueDate: invoice.dueDate,
-    paymentMethod: invoice.paymentMethod,
-    notes: invoice.notes,
-    project: {
-      title: invoice.project.title, client: {
-        name: invoice.project.client.name,
-        telefone: invoice.project.client.phone || '',
-        adress: invoice.project.client.address || '',
-        company: invoice.project.client.company || '',
-      }
-    },
-  }));
+  const invoiceRows: InvoiceRow[] = invoices.map(toInvoiceRow);
 
   const projectOptions: ProjectOption[] = projects.map((project) => ({
     id: project.id,
     title: project.title,
     value: Number(project.value),
     client: { name: project.client.name },
+    invoices: project.invoices.map((inv) => ({
+      id: inv.id,
+      amount: Number(inv.amount),
+      createdAt: inv.createdAt.toISOString(),
+    })),
   }));
 
   return (

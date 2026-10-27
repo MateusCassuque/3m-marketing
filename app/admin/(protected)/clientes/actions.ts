@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/require-admin";
+import { broadcastNotificationsChanged } from "@/lib/realtime";
 import { clientSchema, type ClientValues } from "@/lib/validations/client";
 
 function clean(value?: string) {
@@ -51,6 +52,7 @@ export async function updateClient(id: string, values: ClientValues) {
   revalidatePath("/admin/clientes");
   revalidatePath("/admin/clientes/[id]", "page");
   revalidatePath("/admin/pedidos/[id]", "page");
+  broadcastNotificationsChanged();
 }
 
 export async function deleteClient(id: string) {
@@ -59,4 +61,5 @@ export async function deleteClient(id: string) {
   revalidatePath("/admin/clientes");
   revalidatePath("/admin/clientes/[id]", "page");
   revalidatePath("/admin/pedidos/[id]", "page");
+  broadcastNotificationsChanged();
 }

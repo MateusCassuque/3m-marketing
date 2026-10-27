@@ -5,6 +5,8 @@ import type { Prisma } from "@prisma/client"
 
 import { prisma } from "@/lib/prisma"
 import { requireAdmin } from "@/lib/require-admin"
+import { recomputeProjectInvoices } from "@/lib/invoice-balance-server"
+import { broadcastNotificationsChanged } from "@/lib/realtime"
 import { parseDateOrNull } from "@/lib/serialize"
 import { invoiceSchema, type InvoiceValues } from "@/lib/validations/invoice"
 
@@ -53,8 +55,12 @@ export async function createInvoice(values: InvoiceValues) {
         paymentMethod: parsed.paymentMethod || null,
         notes: parsed.notes || null,
         paidAt: parsed.status === "PAGA" ? new Date() : null,
+        settlesProject: parsed.settlesProject,
       },
     })
+
+    // Calcula a parcela e o valor em falta (e ajusta as restantes facturas do pedido).
+    await recomputeProjectInvoices(tx, parsed.projectId)
   })
 
   revalidatePath("/admin/faturas")
@@ -62,19 +68,24 @@ export async function createInvoice(values: InvoiceValues) {
   revalidatePath("/admin")
   revalidatePath("/admin/clientes/[id]", "page")
   revalidatePath("/admin/pedidos/[id]", "page")
+  broadcastNotificationsChanged()
 }
 
 export async function updateInvoice(id: string, values: InvoiceValues) {
   await requireAdmin()
   const parsed = invoiceSchema.parse(values)
 
-  const existing = await prisma.invoice.findUnique({ where: { id }, select: { status: true } })
+  const existing = await prisma.invoice.findUnique({
+    where: { id },
+    select: { status: true, projectId: true },
+  })
   const justPaid = parsed.status === "PAGA" && existing?.status !== "PAGA"
   const unpaid = parsed.status !== "PAGA" && existing?.status === "PAGA"
 
-  await prisma.invoice.update({
-    where: { id },
-    data: {
+  await prisma.$transaction(async (tx) => {
+    await tx.invoice.update({
+      where: { id },
+      data: {
       projectId: parsed.projectId,
       amount: parsed.amount,
       status: parsed.status,
@@ -82,9 +93,17 @@ export async function updateInvoice(id: string, values: InvoiceValues) {
       dueDate: parseDateOrNull(parsed.dueDate) ?? new Date(),
       paymentMethod: parsed.paymentMethod || null,
       notes: parsed.notes || null,
+      settlesProject: parsed.settlesProject,
       ...(justPaid ? { paidAt: new Date() } : {}),
       ...(unpaid ? { paidAt: null } : {}),
     },
+    })
+
+    await recomputeProjectInvoices(tx, parsed.projectId)
+    // Se a factura mudou de pedido, o pedido antigo também precisa de ser recalculado.
+    if (existing && existing.projectId !== parsed.projectId) {
+      await recomputeProjectInvoices(tx, existing.projectId)
+    }
   })
 
   revalidatePath("/admin/faturas")
@@ -92,14 +111,19 @@ export async function updateInvoice(id: string, values: InvoiceValues) {
   revalidatePath("/admin")
   revalidatePath("/admin/clientes/[id]", "page")
   revalidatePath("/admin/pedidos/[id]", "page")
+  broadcastNotificationsChanged()
 }
 
 export async function deleteInvoice(id: string) {
   await requireAdmin()
-  await prisma.invoice.delete({ where: { id } })
+  await prisma.$transaction(async (tx) => {
+    const invoice = await tx.invoice.delete({ where: { id }, select: { projectId: true } })
+    await recomputeProjectInvoices(tx, invoice.projectId)
+  })
   revalidatePath("/admin/faturas")
   revalidatePath("/admin/financeiro")
   revalidatePath("/admin")
   revalidatePath("/admin/clientes/[id]", "page")
   revalidatePath("/admin/pedidos/[id]", "page")
+  broadcastNotificationsChanged()
 }

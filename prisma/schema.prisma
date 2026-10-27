@@ -172,6 +172,14 @@ model Invoice {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
+  // Controlo de parcelas: recalculado automaticamente (lib/invoice-balance-server.ts)
+  // sempre que uma factura do pedido é criada, editada, cancelada ou eliminada.
+  installment        Int? // 1.ª, 2.ª, 3.ª factura do pedido
+  projectTotal       Decimal? @db.Decimal(10, 2) // valor total do pedido
+  previouslyInvoiced Decimal? @db.Decimal(10, 2) // facturado antes desta factura
+  remaining          Decimal? @db.Decimal(10, 2) // valor em falta depois desta factura
+  settlesProject     Boolean  @default(false) // "não falta mais nada" marcado manualmente
+
   projectId String
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 

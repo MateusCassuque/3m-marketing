@@ -59,7 +59,7 @@ export function InvoiceViewDialog({
                         <span className="text-muted-foreground">Pedido</span>
                         <span className="text-right font-medium text-navy-700">{invoice.project.title}</span>
 
-                        <span className="text-muted-foreground">Valor</span>
+                        <span className="text-muted-foreground">Valor desta factura</span>
                         <span className="text-right font-semibold text-navy-700">{formatCurrency(invoice.amount)}</span>
 
                         <span className="text-muted-foreground">Vencimento</span>
@@ -72,6 +72,30 @@ export function InvoiceViewDialog({
                             </>
                         )}
                     </div>
+
+                    {invoice.projectTotal !== null && invoice.status !== "CANCELADA" && (
+                        <div className="space-y-2 rounded-xl bg-navy-50/70 p-3.5">
+                            <p className="text-xs font-semibold text-navy-500">
+                                {invoice.installment}.ª factura do pedido
+                            </p>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">Total do pedido</span>
+                                <span className="font-medium text-navy-700">{formatCurrency(invoice.projectTotal)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">Já facturado antes</span>
+                                <span className="font-medium text-navy-700">{formatCurrency(invoice.previouslyInvoiced ?? 0)}</span>
+                            </div>
+                            <div className="flex justify-between border-t border-border pt-2">
+                                <span className="font-semibold text-navy-700">Valor em falta</span>
+                                {(invoice.remaining ?? 0) > 0 ? (
+                                    <span className="font-bold text-accent-700">{formatCurrency(invoice.remaining ?? 0)}</span>
+                                ) : (
+                                    <span className="font-bold text-emerald-600">Nada em falta</span>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     {invoice.notes && (
                         <div className="border-t border-border pt-3">

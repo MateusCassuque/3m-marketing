@@ -10,6 +10,8 @@ export const invoiceSchema = z.object({
   dueDate: z.string().min(1, "Informe a data de vencimento."),
   paymentMethod: z.string().trim().max(60).optional().or(z.literal("")),
   notes: z.string().trim().max(1000).optional().or(z.literal("")),
+  /** "Não falta mais nada": esta factura fecha o pedido (valor em falta = 0). */
+  settlesProject: z.boolean().default(false),
 });
 
 export type InvoiceValues = z.infer<typeof invoiceSchema>;

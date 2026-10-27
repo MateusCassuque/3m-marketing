@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2, TriangleAlert } from "lucide-react";
 
 import {
   Dialog,
@@ -19,6 +19,8 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { invoiceSchema, type InvoiceValues, INVOICE_STATUS_VALUES } from "@/lib/validations/invoice";
 import { INVOICE_STATUS_LABELS } from "@/lib/invoice-labels";
+import { computeBalance } from "@/lib/invoice-balance";
+import { formatCurrency } from "@/lib/utils";
 import { createInvoice, updateInvoice } from "@/app/admin/(protected)/faturas/actions";
 
 export interface InvoiceFormData {
@@ -31,6 +33,8 @@ export interface InvoiceFormData {
   dueDate: Date;
   paymentMethod: string | null;
   notes: string | null;
+  settlesProject: boolean;
+  createdAt: Date;
 }
 
 export interface ProjectOption {
@@ -38,6 +42,8 @@ export interface ProjectOption {
   title: string;
   value: number;
   client: { name: string };
+  /** Facturas não canceladas do pedido — servem para calcular o que já foi facturado. */
+  invoices: { id: string; amount: number; createdAt: string }[];
 }
 
 interface InvoiceFormDialogProps {
@@ -55,6 +61,7 @@ const EMPTY_VALUES: InvoiceValues = {
   dueDate: "",
   paymentMethod: "",
   notes: "",
+  settlesProject: false,
 };
 
 function toDateInputValue(date: Date) {
@@ -77,6 +84,30 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice, projects }: Inv
   });
 
   const selectedProjectId = watch("projectId");
+  const watchedAmount = Number(watch("amount")) || 0;
+  const settles = Boolean(watch("settlesProject"));
+
+  const project = projects.find((p) => p.id === selectedProjectId);
+
+  // Facturas anteriores do pedido: todas, ou — ao editar — só as criadas antes desta.
+  const previous = useMemo(() => {
+    if (!project) return { sum: 0, count: 0 };
+    const list = project.invoices.filter((inv) => {
+      if (invoice && inv.id === invoice.id) return false;
+      if (invoice) return new Date(inv.createdAt) < new Date(invoice.createdAt);
+      return true;
+    });
+    return { sum: list.reduce((acc, inv) => acc + inv.amount, 0), count: list.length };
+  }, [project, invoice]);
+
+  const balance = project
+    ? computeBalance({
+        total: project.value,
+        previouslyInvoiced: previous.sum,
+        amount: watchedAmount,
+        settles,
+      })
+    : null;
 
   useEffect(() => {
     if (open) {
@@ -90,6 +121,7 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice, projects }: Inv
             dueDate: toDateInputValue(invoice.dueDate),
             paymentMethod: invoice.paymentMethod ?? "",
             notes: invoice.notes ?? "",
+            settlesProject: invoice.settlesProject,
           }
           : EMPTY_VALUES,
       );
@@ -99,9 +131,15 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice, projects }: Inv
   // Conveniência: ao escolher o pedido numa fatura nova, sugere o valor do pedido.
   const handleProjectChange = (projectId: string) => {
     setValue("projectId", projectId);
+    setValue("settlesProject", false);
     if (!isEditing) {
-      const project = projects.find((p) => p.id === projectId);
-      if (project) setValue("amount", project.value);
+      // Sugere o que ainda falta facturar (ou o total, se for a primeira factura).
+      const chosen = projects.find((p) => p.id === projectId);
+      if (chosen) {
+        const invoiced = chosen.invoices.reduce((acc, inv) => acc + inv.amount, 0);
+        const left = Math.max(chosen.value - invoiced, 0);
+        setValue("amount", left > 0 ? left : chosen.value);
+      }
     }
   };
 
@@ -165,6 +203,87 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice, projects }: Inv
               </Select>
             </div>
           </div>
+
+          {project && balance && (
+            <div className="space-y-3 rounded-xl border border-border bg-navy-50/60 p-4 text-sm">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="font-semibold text-navy-700">
+                  {previous.count + 1}.ª factura deste pedido
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {balance.remainingBefore > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setValue("amount", balance.remainingBefore, { shouldValidate: true })}
+                      className="rounded-full border border-primary-200 bg-white px-2.5 py-1 text-xs font-semibold text-primary-700 hover:bg-primary-50"
+                    >
+                      Cobrar o restante ({formatCurrency(balance.remainingBefore)})
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setValue("amount", project.value / 2, { shouldValidate: true })}
+                    className="rounded-full border border-border bg-white px-2.5 py-1 text-xs font-semibold text-navy-600 hover:bg-navy-50"
+                  >
+                    50%
+                  </button>
+                </div>
+              </div>
+
+              <dl className="space-y-1.5">
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Total do pedido</dt>
+                  <dd className="font-medium text-navy-700">{formatCurrency(balance.total)}</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Já facturado antes</dt>
+                  <dd className="font-medium text-navy-700">{formatCurrency(balance.previouslyInvoiced)}</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Valor a cobrar nesta factura</dt>
+                  <dd className="font-medium text-navy-700">{formatCurrency(balance.amount)}</dd>
+                </div>
+              </dl>
+
+              <div
+                className={
+                  balance.excess > 0
+                    ? "flex items-center justify-between gap-3 rounded-lg bg-red-50 px-3 py-2.5 text-red-700"
+                    : balance.remaining > 0
+                      ? "flex items-center justify-between gap-3 rounded-lg bg-accent-50 px-3 py-2.5 text-accent-700"
+                      : "flex items-center justify-between gap-3 rounded-lg bg-emerald-50 px-3 py-2.5 text-emerald-700"
+                }
+              >
+                <span className="flex items-center gap-2 font-semibold">
+                  {balance.excess > 0 ? (
+                    <TriangleAlert className="h-4 w-4" />
+                  ) : balance.remaining > 0 ? null : (
+                    <CheckCircle2 className="h-4 w-4" />
+                  )}
+                  {balance.excess > 0
+                    ? "Ultrapassa o total do pedido"
+                    : balance.remaining > 0
+                      ? "Valor em falta"
+                      : "Nada em falta"}
+                </span>
+                <span className="font-display text-base font-bold">
+                  {balance.excess > 0 ? `+ ${formatCurrency(balance.excess)}` : formatCurrency(balance.remaining)}
+                </span>
+              </div>
+
+              <label className="flex cursor-pointer items-start gap-2.5 text-[13px] leading-snug text-navy-600">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 rounded border-border accent-[#0098DC]"
+                  {...register("settlesProject")}
+                />
+                <span>
+                  <strong className="text-navy-700">Esta factura fecha o pedido</strong> — não falta cobrar mais nada
+                  (por exemplo, a última parcela ou um acordo com desconto).
+                </span>
+              </label>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getNotifications } from "@/lib/notifications";
+import { notifyUserNotificationsChanged } from "@/lib/realtime";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,9 @@ export async function POST(request: Request) {
       skipDuplicates: true,
     });
   }
+
+  // Sincroniza os outros dispositivos/separadores deste utilizador.
+  notifyUserNotificationsChanged(adminId);
 
   return NextResponse.json(await getNotifications(adminId));
 }

@@ -10,6 +10,8 @@ import type { AppNotification, NotificationsPayload } from "@/lib/notification-t
 import { cn } from "@/lib/utils";
 
 const POLL_MS = 60_000;
+/** Com o tempo real ligado, a consulta periódica serve só de rede de segurança (ex.: viragem do dia). */
+const POLL_LIVE_MS = 300_000;
 const STORAGE_KEY = "kodeza:notified";
 export const NOTIFICATIONS_CHANGED = "kodeza:notifications-changed";
 
@@ -57,7 +59,7 @@ async function showSystemNotification(title: string, body: string, url: string, 
   }
 }
 
-export function NotificationBell() {
+export function NotificationBell({ userId }: { userId: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const [data, setData] = useState<NotificationsPayload>({ items: [], unread: 0 });
@@ -65,6 +67,7 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"all" | "unread">("all");
   const [permission, setPermission] = useState<Permission>("default");
+  const [live, setLive] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const permissionRef = useRef<Permission>("default");
 
@@ -137,7 +140,7 @@ export function NotificationBell() {
 
   // Actualização periódica, ao voltar ao separador e quando outra parte do painel mexe nas notificações.
   useEffect(() => {
-    const interval = window.setInterval(() => void load(), POLL_MS);
+    const interval = window.setInterval(() => void load(), live ? POLL_LIVE_MS : POLL_MS);
     const onVisible = () => {
       if (!document.hidden) void load();
     };
@@ -151,7 +154,63 @@ export function NotificationBell() {
       window.removeEventListener("focus", onVisible);
       window.removeEventListener(NOTIFICATIONS_CHANGED, onChanged);
     };
-  }, [load]);
+  }, [load, live]);
+
+  // Tempo real (Pusher): o servidor avisa quando facturas/pedidos mudam ou quando
+  // este utilizador marca algo como lido noutro dispositivo. O evento não leva dados:
+  // só despoleta uma nova consulta autenticada.
+  useEffect(() => {
+    const key = process.env.NEXT_PUBLIC_PUSHER_KEY;
+    const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
+    if (!key || !cluster || !userId) return;
+
+    let cancelled = false;
+    let cleanup = () => {};
+
+    (async () => {
+      try {
+        const { default: Pusher } = await import("pusher-js");
+        if (cancelled) return;
+
+        const client = new Pusher(key, {
+          cluster,
+          channelAuthorization: { endpoint: "/api/pusher/auth", transport: "ajax" },
+        });
+
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        const refresh = () => {
+          clearTimeout(timer);
+          timer = setTimeout(() => void load(), 250); // junta rajadas de eventos numa só consulta
+        };
+
+        const shared = client.subscribe("private-admins");
+        const mine = client.subscribe(`private-user-${userId}`);
+        shared.bind("notifications:changed", refresh);
+        mine.bind("notifications:changed", refresh);
+
+        client.connection.bind("state_change", (state: { current: string }) => {
+          const connected = state.current === "connected";
+          setLive(connected);
+          if (connected) refresh();
+        });
+
+        cleanup = () => {
+          clearTimeout(timer);
+          client.unsubscribe("private-admins");
+          client.unsubscribe(`private-user-${userId}`);
+          client.disconnect();
+          setLive(false);
+        };
+      } catch (error) {
+        console.error("[tempo real] não foi possível ligar", error);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      cleanup();
+    };
+  }, [userId, load]);
 
   // Contador no título do separador "(3) Dashboard…" e no ícone da app instalada.
   useEffect(() => {
@@ -245,7 +304,18 @@ export function NotificationBell() {
           className="fixed inset-x-3 top-[68px] z-50 overflow-hidden rounded-2xl border border-border bg-white shadow-card md:absolute md:inset-x-auto md:right-0 md:top-[52px] md:w-[420px]"
         >
           <div className="flex items-center justify-between px-4 pb-2 pt-4">
-            <h2 className="font-display text-lg font-bold text-navy-700">Notificações</h2>
+            <div>
+              <h2 className="font-display text-lg font-bold text-navy-700">Notificações</h2>
+              {live && (
+                <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-600">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                  </span>
+                  Em tempo real
+                </p>
+              )}
+            </div>
             {data.unread > 0 && (
               <button
                 type="button"

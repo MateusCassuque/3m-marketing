@@ -18,6 +18,7 @@ export default async function ProtectedAdminLayout({
     <AdminShell
       userName={session.user.name ?? "Administrador"}
       userEmail={session.user.email ?? ""}
+      userId={session.user.id}
       isAdmin={session.user.role === "ADMIN"}
     >
       {children}

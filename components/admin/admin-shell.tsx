@@ -11,12 +11,13 @@ import { Logo } from "@/components/logo";
 interface AdminShellProps {
   userName: string;
   userEmail: string;
+  userId: string;
   isAdmin: boolean;
   children: React.ReactNode;
 }
 
 /** Estrutura do painel: menu lateral + barra de topo (com o sino de notificações) + conteúdo. */
-export function AdminShell({ userName, userEmail, isAdmin, children }: AdminShellProps) {
+export function AdminShell({ userName, userEmail, userId, isAdmin, children }: AdminShellProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -36,7 +37,7 @@ export function AdminShell({ userName, userEmail, isAdmin, children }: AdminShel
             <Logo variant="light" className="h-7" />
           </Link>
           <div className="flex items-center gap-2">
-            <NotificationBell />
+            <NotificationBell userId={userId} />
             <button
               type="button"
               onClick={() => setMenuOpen(true)}

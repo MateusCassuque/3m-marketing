@@ -54,6 +54,13 @@ Perfis: **ADMIN** (tudo) e **EDITOR** (só consulta).
 - O número (`FAT-0001`, `FAT-0002`…) vem de um **contador** (`InvoiceCounter`) que só avança. Eliminar uma factura não
   "devolve" o número, por isso nunca há colisões nem números repetidos (os saltos na numeração são intencionais).
   A migração `20261017120000_invoice_counter` arranca o contador no maior número já emitido.
+- **Parcelas e valor em falta:** ao criar uma factura, escolhe o pedido e o valor a cobrar; o formulário mostra em tempo
+  real *Total do pedido · Já facturado antes · Valor a cobrar · Valor em falta* e tem atalhos "Cobrar o restante" e "50%".
+  A caixa **"Esta factura fecha o pedido"** força o valor em falta a zero (última parcela, desconto…). Se a soma
+  ultrapassar o total, aparece um aviso a vermelho. O cálculo é feito no servidor (`lib/invoice-balance-server.ts`) e é
+  refeito para todas as facturas do pedido sempre que uma é criada, editada, cancelada ou eliminada, ou se o valor do
+  pedido muda — por isso nenhuma fica com números desactualizados. Facturas canceladas não contam como facturado.
+  Aparece na tabela ("Em falta"), no detalhe, no PDF e nas páginas do cliente e do pedido.
 - Cada cliente (`/admin/clientes/[id]`) e cada pedido (`/admin/pedidos/[id]`) tem uma página de resumo com as respectivas facturas.
 - Filtros por estado: facturas (pendentes, vencidas, pagas, canceladas) e pedidos (por fase).
 
@@ -70,6 +77,17 @@ Desaparecem sozinhas quando a factura é paga ou o pedido concluído. O "lido" �
 Além do sino: contador no título do separador, **alertas do sistema** (barra de tarefas / centro de notificações, via
 `public/sw.js`, activados no botão "Activar" do painel) e emblema no ícone quando o painel está instalado como app.
 Os alertas só chegam com o painel aberto num separador; para avisar com tudo fechado seria preciso Web Push.
+
+### Tempo real (Pusher)
+
+Quando uma factura ou pedido é criado, editado ou eliminado, o servidor envia um evento (sem dados) para os canais privados
+`private-admins` e `private-user-<id>`; os painéis abertos voltam a consultar `/api/admin/notifications` e o sino, o contador
+e os alertas do sistema actualizam-se em ~1 segundo. Marcar como lido sincroniza os outros dispositivos do mesmo utilizador.
+A subscrição é autorizada em `/api/pusher/auth` (só com sessão do painel, e cada utilizador só no seu canal).
+
+Variáveis (ver `.env.example`; no Vercel, em *Settings → Environment Variables*, e depois novo deploy):
+`PUSHER_APP_ID`, `NEXT_PUBLIC_PUSHER_KEY`, `NEXT_PUBLIC_PUSHER_CLUSTER`, **`PUSHER_SECRET`** (só no servidor).
+Sem elas o tempo real fica desligado e o painel volta à consulta de minuto a minuto.
 
 ## Segurança — o que mudou
 
