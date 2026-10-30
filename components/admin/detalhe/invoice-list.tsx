@@ -64,11 +64,11 @@ export function InvoiceList({
                   </p>
                 )}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <Badge variant={late ? "destructive" : INVOICE_STATUS_BADGE[invoice.status]}>
                   {late ? "Vencida" : INVOICE_STATUS_LABELS[invoice.status]}
                 </Badge>
-                <span className="text-right font-display font-bold text-navy-700">
+                <span className="text-center font-display font-bold text-navy-700">
                   {formatCurrency(invoice.amount)}
                 </span>
                 <Button variant="outline" size="sm" onClick={() => setViewing(invoice)} aria-label={`Ver factura ${invoice.number}`}>

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { Logo } from "@/components/logo";
+import { InstallAppButton } from "@/components/admin/install-app-button";
 import { SignOutButton } from "@/components/admin/sign-out-button";
 import { cn } from "@/lib/utils";
 
@@ -167,6 +168,7 @@ export function AdminSidebar({ userName, userEmail, isAdmin, isOpen, onClose }: 
               </p>
             </div>
           </div>
+          <InstallAppButton />
           <SignOutButton />
         </div>
       </aside>

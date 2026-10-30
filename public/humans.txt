@@ -4,7 +4,6 @@ version: 2.0.0
 
 /* TEAM */
 Company: Kodeza — Desenvolvimento de Websites e Aplicações Web
-CEO: Mateus F.L. Cassuque
 From: Luanda, Angola
 
 /* THANKS */

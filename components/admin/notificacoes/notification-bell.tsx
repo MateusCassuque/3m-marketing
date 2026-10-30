@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Bell, BellRing, CheckCheck } from "lucide-react";
 
+import { setFaviconBadge } from "@/lib/favicon-badge";
+import { patchBadgeDiag, patchRealtimeDiag } from "@/lib/realtime-client-state";
 import { NotificationRow } from "@/components/admin/notificacoes/notification-row";
 import type { AppNotification, NotificationsPayload } from "@/lib/notification-types";
 import { cn } from "@/lib/utils";
@@ -162,6 +164,7 @@ export function NotificationBell({ userId }: { userId: string }) {
   useEffect(() => {
     const key = process.env.NEXT_PUBLIC_PUSHER_KEY;
     const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
+    patchRealtimeDiag({ keyPresent: Boolean(key && cluster) });
     if (!key || !cluster || !userId) return;
 
     let cancelled = false;
@@ -182,14 +185,32 @@ export function NotificationBell({ userId }: { userId: string }) {
           clearTimeout(timer);
           timer = setTimeout(() => void load(), 250); // junta rajadas de eventos numa só consulta
         };
+        const onEvent = (payload?: { reason?: string }) => {
+          patchRealtimeDiag({ lastEventAt: Date.now(), lastEventReason: payload?.reason });
+          refresh();
+        };
 
         const shared = client.subscribe("private-admins");
         const mine = client.subscribe(`private-user-${userId}`);
-        shared.bind("notifications:changed", refresh);
-        mine.bind("notifications:changed", refresh);
+        shared.bind("notifications:changed", onEvent);
+        mine.bind("notifications:changed", onEvent);
+
+        // Diagnóstico: a ligação pode estar bem e a autorização dos canais falhar (p. ex. sem PUSHER_SECRET).
+        const describe = (err: unknown) => {
+          const e = err as { status?: number; error?: string; type?: string } | undefined;
+          if (e?.status === 503) return "O servidor não tem o PUSHER_SECRET (ou outras variáveis) configurado.";
+          if (e?.status === 401) return "Sessão inválida na autorização do canal.";
+          if (e?.status === 403) return "Canal não permitido para este utilizador.";
+          return e?.error || (e?.status ? `Erro ${e.status} na autorização.` : "Falha ao subscrever o canal.");
+        };
+        shared.bind("pusher:subscription_succeeded", () => patchRealtimeDiag({ shared: "ok", sharedError: undefined }));
+        mine.bind("pusher:subscription_succeeded", () => patchRealtimeDiag({ mine: "ok", mineError: undefined }));
+        shared.bind("pusher:subscription_error", (err: unknown) => patchRealtimeDiag({ shared: "error", sharedError: describe(err) }));
+        mine.bind("pusher:subscription_error", (err: unknown) => patchRealtimeDiag({ mine: "error", mineError: describe(err) }));
 
         client.connection.bind("state_change", (state: { current: string }) => {
           const connected = state.current === "connected";
+          patchRealtimeDiag({ connection: state.current });
           setLive(connected);
           if (connected) refresh();
         });
@@ -212,7 +233,11 @@ export function NotificationBell({ userId }: { userId: string }) {
     };
   }, [userId, load]);
 
-  // Contador no título do separador "(3) Dashboard…" e no ícone da app instalada.
+  // Vermelho quando há algo urgente por ler (cobranças e pedidos atrasados); azul se são só pendentes.
+  const urgent = data.items.some((i) => !i.read && i.type !== "invoice-pending");
+
+  // Contador no título do separador "(3) Dashboard…", no ícone do separador (vermelho/azul)
+  // e no ícone da app instalada (emblema nativo do sistema).
   useEffect(() => {
     const apply = () => {
       const base = document.title.replace(/^\(\d+\)\s*/, "");
@@ -224,10 +249,19 @@ export function NotificationBell({ userId }: { userId: string }) {
       setAppBadge?: (n?: number) => Promise<void>;
       clearAppBadge?: () => Promise<void>;
     };
-    if (data.unread > 0) nav.setAppBadge?.(data.unread)?.catch(() => undefined);
-    else nav.clearAppBadge?.()?.catch(() => undefined);
+    const supported = typeof nav.setAppBadge === "function";
+    patchBadgeDiag({ supported });
+    try {
+      const op = data.unread > 0 ? nav.setAppBadge?.(data.unread) : nav.clearAppBadge?.();
+      op?.then(() => patchBadgeDiag({ lastResult: "ok", lastCount: data.unread, error: undefined })).catch((err: unknown) =>
+        patchBadgeDiag({ lastResult: "error", error: err instanceof Error ? err.message : String(err) }),
+      );
+    } catch (err) {
+      patchBadgeDiag({ lastResult: "error", error: err instanceof Error ? err.message : String(err) });
+    }
+    void setFaviconBadge(data.unread, urgent ? "red" : "blue");
     return () => window.clearTimeout(timer);
-  }, [data.unread, pathname]);
+  }, [data.unread, urgent, pathname]);
 
   // Fechar ao clicar fora, com Escape ou ao mudar de página.
   useEffect(() => {
@@ -291,7 +325,12 @@ export function NotificationBell({ userId }: { userId: string }) {
       >
         {data.unread > 0 ? <BellRing className="h-5 w-5" strokeWidth={1.8} /> : <Bell className="h-5 w-5" strokeWidth={1.8} />}
         {data.unread > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold leading-none text-white ring-2 ring-[#F3F6FB]">
+          <span
+            className={cn(
+              "absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-bold leading-none text-white shadow-sm ring-2 ring-[#F3F6FB]",
+              urgent ? "bg-gradient-to-b from-[#FF5A5F] to-[#E11D48]" : "bg-gradient-to-b from-[#2BB8F2] to-[#0071B8]",
+            )}
+          >
             {badge}
           </span>
         )}

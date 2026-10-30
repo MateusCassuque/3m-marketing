@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { getNotifications } from "@/lib/notifications";
 import { PageHeader } from "@/components/admin/page-header";
 import { NotificationList } from "@/components/admin/notificacoes/notification-list";
+import { RealtimeStatus } from "@/components/admin/notificacoes/realtime-status";
 
 export const metadata: Metadata = {
   title: "Notificações | Painel Kodeza",
@@ -23,6 +24,10 @@ export default async function NotificationsPage() {
         description="Cobranças por fazer, facturas pendentes e pedidos atrasados. Desaparecem sozinhas quando a situação se resolve."
       />
       <NotificationList initial={items} />
+
+      <div className="mt-8">
+        <RealtimeStatus />
+      </div>
     </div>
   );
 }

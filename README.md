@@ -78,6 +78,22 @@ Além do sino: contador no título do separador, **alertas do sistema** (barra d
 `public/sw.js`, activados no botão "Activar" do painel) e emblema no ícone quando o painel está instalado como app.
 Os alertas só chegam com o painel aberto num separador; para avisar com tudo fechado seria preciso Web Push.
 
+### Emblema no ícone
+
+- **Ícone da app instalada:** o painel é instalável à parte (`public/admin-manifest.json`; abre direto em `/admin`) e usa a
+  Badging API (`navigator.setAppBadge`) para mostrar o número de notificações por ler. Este emblema é desenhado pelo sistema
+  operativo — a cor e o formato são dele (iOS/macOS: vermelho; Windows e Android variam) e não é possível mudá-los.
+- **Ícone do separador:** `lib/favicon-badge.ts` desenha um emblema próprio — **vermelho** se há algo urgente (cobranças ou
+  pedidos atrasados), **azul** se são só facturas pendentes. O sino do painel usa as mesmas cores.
+- Botão "Instalar app do painel" no menu lateral (Chrome/Edge/Android; no iPhone: Partilhar → Adicionar ao ecrã principal).
+
+### Diagnóstico
+
+`/admin/notificacoes` termina com o cartão **"Diagnóstico do tempo real e do emblema"**: mostra se as variáveis do Pusher
+existem no servidor e no browser, o estado da ligação, se os dois canais foram autorizados, e tem o botão
+**"Enviar evento de teste"** (confirma o circuito completo e mede a latência). Do lado do emblema indica se o browser o
+suporta, se está a usar a app instalada, a permissão de notificações e o último resultado do sistema.
+
 ### Tempo real (Pusher)
 
 Quando uma factura ou pedido é criado, editado ou eliminado, o servidor envia um evento (sem dados) para os canais privados
