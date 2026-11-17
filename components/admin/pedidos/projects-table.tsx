@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { Client } from "@prisma/client";
-import { CalendarClock, Pencil, Plus, Trash2, User } from "lucide-react";
+import { CalendarClock, Pencil, Plus, Repeat, Trash2, User } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -111,6 +111,11 @@ export function ProjectsTable({ projects, clients, q, estado, page, totalPages, 
                   <User className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                   {project.client.name}
                   <span className="text-muted-foreground">· {SERVICE_LABELS[project.service]}</span>
+                  {project.billingType === "RECORRENTE" && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-primary-50 px-2 py-0.5 text-xs font-semibold text-primary-700">
+                      <Repeat className="h-3 w-3" /> Recorrente
+                    </span>
+                  )}
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <Badge variant={PROJECT_STATUS_BADGE[project.status]}>{PROJECT_STATUS_LABELS[project.status]}</Badge>
@@ -154,7 +159,14 @@ export function ProjectsTable({ projects, clients, q, estado, page, totalPages, 
                         {project.client.name}
                       </Link>
                     </td>
-                    <td className="px-5 py-3.5 text-muted-foreground">{SERVICE_LABELS[project.service]}</td>
+                    <td className="px-5 py-3.5 text-muted-foreground">
+                      {SERVICE_LABELS[project.service]}
+                      {project.billingType === "RECORRENTE" && (
+                        <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-primary-50 px-2 py-0.5 text-xs font-semibold text-primary-700">
+                          <Repeat className="h-3 w-3" /> Recorrente
+                        </span>
+                      )}
+                    </td>
                     <td className="px-5 py-3.5">
                       <Badge variant={PROJECT_STATUS_BADGE[project.status]}>
                         {PROJECT_STATUS_LABELS[project.status]}

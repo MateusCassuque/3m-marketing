@@ -8,6 +8,9 @@ export const SERVICE_LABELS: Record<ServiceInterest, string> = {
   MIDIAS_SOCIAIS: "Redes sociais (3M)",
   IDENTIDADE_VISUAL: "Identidade visual",
   REGISTO_EMPRESA: "Registo de empresa",
+  ASSESSORIA_VISTO: "Assessoria de visto",
+  BILHETES: "Bilhetes de passagem",
+  ASSESSORIA_PASSAPORTE: "Assessoria de passaporte",
   // Valores antigos, mantidos para não perder o histórico de leads.
   ESTRATEGIA: "Estratégia",
   CRIATIVIDADE: "Criatividade",
@@ -24,6 +27,9 @@ export const ACTIVE_SERVICES: ServiceInterest[] = [
   "MIDIAS_SOCIAIS",
   "IDENTIDADE_VISUAL",
   "REGISTO_EMPRESA",
+  "ASSESSORIA_VISTO",
+  "BILHETES",
+  "ASSESSORIA_PASSAPORTE",
   "OUTRO",
 ];
 

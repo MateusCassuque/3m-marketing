@@ -6,6 +6,7 @@ import { firstParam, hasKey, paginate, parsePage } from "@/lib/pagination";
 import { PageHeader } from "@/components/admin/page-header";
 import { StatusChips } from "@/components/admin/status-chips";
 import { PROJECT_STATUS_LABELS } from "@/lib/project-labels";
+import { parseServiceDetails } from "@/lib/service-details";
 import { ProjectsTable, type ProjectRow } from "@/components/admin/pedidos/projects-table";
 
 export const metadata: Metadata = {
@@ -74,6 +75,12 @@ export default async function PedidosPage({
     value: Number(project.value),
     startDate: project.startDate,
     dueDate: project.dueDate,
+    billingType: project.billingType,
+    recurrenceMonths: project.recurrenceMonths,
+    nextBillingDate: project.nextBillingDate,
+    recurrenceEndDate: project.recurrenceEndDate,
+    paymentTermDays: project.paymentTermDays,
+    serviceDetails: parseServiceDetails(project.serviceDetails),
     client: { name: project.client.name },
   }));
 

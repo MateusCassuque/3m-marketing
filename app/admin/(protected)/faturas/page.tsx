@@ -4,6 +4,7 @@ import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { toInvoiceRow } from "@/lib/invoice-rows";
+import { runRecurringBilling } from "@/lib/recurring-billing";
 import { firstParam, hasKey, paginate, parsePage } from "@/lib/pagination";
 import { PageHeader } from "@/components/admin/page-header";
 import { StatusChips } from "@/components/admin/status-chips";
@@ -22,6 +23,9 @@ export default async function FaturasPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  // Garante que as cobranças recorrentes já vencidas estão emitidas antes de listar.
+  await runRecurringBilling().catch((error) => console.error("[faturas] facturação recorrente falhou", error));
+
   const params = await searchParams;
   const q = firstParam(params.q).trim();
 
@@ -107,6 +111,7 @@ export default async function FaturasPage({
     title: project.title,
     value: Number(project.value),
     client: { name: project.client.name },
+    recurring: project.billingType === "RECORRENTE",
     invoices: project.invoices.map((inv) => ({
       id: inv.id,
       amount: Number(inv.amount),

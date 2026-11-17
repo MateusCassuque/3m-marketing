@@ -3,27 +3,24 @@ import Link from "next/link";
 import {
   AlertTriangle,
   ArrowRight,
-  Briefcase,
   CalendarClock,
   Inbox,
+  Repeat,
   Target,
-  Users,
+  Timer,
   Wallet,
 } from "lucide-react";
 
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { runRecurringBilling } from "@/lib/recurring-billing";
 import { formatCurrency, formatDateNotTime } from "@/lib/utils";
 import { SERVICE_LABELS, STATUS_BADGE_VARIANT, STATUS_LABELS } from "@/lib/lead-labels";
 import { PROJECT_STATUS_LABELS } from "@/lib/project-labels";
 import { Badge } from "@/components/ui/badge";
-import { PageHeader } from "@/components/admin/page-header";
 import { PeriodFilter, parsePeriod } from "@/components/admin/period-filter";
 import { KpiCard } from "@/components/admin/dashboard/kpi-card";
-import {
-  LeadsTrendChart,
-  RevenueChart,
-  ServiceDonut,
-} from "@/components/admin/dashboard/overview-charts";
+import { LeadsTrendChart, RevenueChart, ServiceDonut } from "@/components/admin/dashboard/overview-charts";
 
 export const metadata: Metadata = {
   title: "Dashboard | Painel Kodeza",
@@ -35,10 +32,26 @@ export const dynamic = "force-dynamic";
 const MONTHS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 const DAY_MS = 24 * 60 * 60 * 1000;
 const OPEN_STATUSES = ["BACKLOG", "EM_ANDAMENTO", "EM_REVISAO"] as const;
+const TZ = "Africa/Luanda";
+
+const CARD =
+  "rounded-2xl bg-white p-6 shadow-[0_1px_2px_rgba(4,19,46,0.05),0_8px_24px_-12px_rgba(4,19,46,0.08)] ring-1 ring-navy-900/[0.04]";
 
 function pct(current: number, previous: number): number | null {
   if (previous === 0) return current === 0 ? 0 : null;
   return Math.round(((current - previous) / previous) * 100);
+}
+
+function greeting() {
+  const hour = Number(new Date().toLocaleString("pt-PT", { hour: "numeric", hour12: false, timeZone: TZ }));
+  if (hour < 12) return "Bom dia";
+  if (hour < 19) return "Boa tarde";
+  return "Boa noite";
+}
+
+function todayLabel() {
+  const text = new Date().toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "long", timeZone: TZ });
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 /** Agrupa leads em pontos do gráfico: diário (≤30d), semanal (90d) ou mensal (12m). */
@@ -79,7 +92,11 @@ function buildLeadsSeries(dates: Date[], days: number, now: Date) {
 
 async function getDashboardData(days: number) {
   try {
+    // Emite primeiro as cobranças recorrentes já vencidas, para os números estarem certos.
+    await runRecurringBilling().catch((error) => console.error("[dashboard] facturação recorrente falhou", error));
+
     const now = new Date();
+    const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const since = new Date(now.getTime() - days * DAY_MS);
     const previousSince = new Date(since.getTime() - days * DAY_MS);
     const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
@@ -87,44 +104,59 @@ async function getDashboardData(days: number) {
     const [
       leadsPeriod,
       leadsPrevious,
-      clientsTotal,
-      clientsNew,
       projectsByStatus,
       dueSoon,
+      lateProjects,
       invoices,
       latestLeads,
+      recurringProjects,
     ] = await Promise.all([
       prisma.lead.findMany({
         where: { createdAt: { gte: since } },
         select: { createdAt: true, status: true, service: true },
       }),
       prisma.lead.count({ where: { createdAt: { gte: previousSince, lt: since } } }),
-      prisma.client.count(),
-      prisma.client.count({ where: { createdAt: { gte: since } } }),
       prisma.project.groupBy({ by: ["status"], _count: { _all: true } }),
       prisma.project.findMany({
         where: {
           status: { in: [...OPEN_STATUSES] },
-          dueDate: { not: null, lte: new Date(now.getTime() + 14 * DAY_MS) },
+          dueDate: { gte: startToday, lte: new Date(now.getTime() + 14 * DAY_MS) },
         },
         orderBy: { dueDate: "asc" },
-        take: 5,
+        take: 4,
         select: { id: true, title: true, dueDate: true, client: { select: { name: true } } },
       }),
+      prisma.project.count({ where: { status: { in: [...OPEN_STATUSES] }, dueDate: { lt: startToday } } }),
       prisma.invoice.findMany({
-        where: { OR: [{ issueDate: { gte: sixMonthsAgo } }, { status: { in: ["PENDENTE", "VENCIDA"] } }, { paidAt: { gte: sixMonthsAgo } }] },
+        where: {
+          OR: [
+            { issueDate: { gte: sixMonthsAgo } },
+            { status: { in: ["PENDENTE", "VENCIDA"] } },
+            { paidAt: { gte: sixMonthsAgo } },
+          ],
+        },
         select: {
           id: true,
-          number: true,
           amount: true,
           status: true,
           issueDate: true,
           dueDate: true,
           paidAt: true,
-          project: { select: { title: true, client: { select: { name: true } } } },
         },
       }),
-      prisma.lead.findMany({ orderBy: { createdAt: "desc" }, take: 6 }),
+      prisma.lead.findMany({ orderBy: { createdAt: "desc" }, take: 5 }),
+      prisma.project.findMany({
+        where: { billingType: "RECORRENTE", status: { notIn: ["CONCLUIDO", "CANCELADO"] } },
+        orderBy: { nextBillingDate: "asc" },
+        select: {
+          id: true,
+          title: true,
+          value: true,
+          recurrenceMonths: true,
+          nextBillingDate: true,
+          client: { select: { name: true } },
+        },
+      }),
     ]);
 
     // ---- Leads ----
@@ -148,17 +180,22 @@ async function getDashboardData(days: number) {
     // ---- Facturas ----
     let receivedPeriod = 0;
     let toReceive = 0;
-    const overdue: typeof invoices = [];
+    let overdueCount = 0;
+    let overdueTotal = 0;
+    let dueWeekCount = 0;
     invoices.forEach((inv) => {
       const amount = Number(inv.amount);
       if (inv.status === "PAGA" && inv.paidAt && inv.paidAt >= since) receivedPeriod += amount;
       if (inv.status === "PENDENTE" || inv.status === "VENCIDA") {
         toReceive += amount;
-        if (inv.status === "VENCIDA" || inv.dueDate < now) overdue.push(inv);
+        if (inv.status === "VENCIDA" || inv.dueDate < startToday) {
+          overdueCount += 1;
+          overdueTotal += amount;
+        } else if (inv.dueDate.getTime() <= startToday.getTime() + 7 * DAY_MS) {
+          dueWeekCount += 1;
+        }
       }
     });
-    overdue.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
-    const overdueTotal = overdue.reduce((sum, inv) => sum + Number(inv.amount), 0);
 
     const revenue = [];
     for (let i = 5; i >= 0; i--) {
@@ -175,31 +212,90 @@ async function getDashboardData(days: number) {
       });
     }
 
+    // ---- Receita recorrente mensal (valor de cada cobrança ÷ meses do ciclo) ----
+    const mrr = recurringProjects.reduce(
+      (sum, p) => sum + Number(p.value) / Math.max(p.recurrenceMonths ?? 1, 1),
+      0,
+    );
+
     return {
       connected: true as const,
       leadsCount: leadsPeriod.length,
       leadsDelta: pct(leadsPeriod.length, leadsPrevious),
       conversion,
       won,
-      clientsTotal,
-      clientsNew,
       openProjects,
       pipeline,
       dueSoon,
+      lateProjects,
       receivedPeriod,
       toReceive,
-      overdue: overdue.slice(0, 5),
-      overdueCount: overdue.length,
+      overdueCount,
       overdueTotal,
+      dueWeekCount,
       revenue,
       serviceData,
       leadsSeries: buildLeadsSeries(leadsPeriod.map((l) => l.createdAt), days, now),
       latestLeads,
+      mrr,
+      recurringCount: recurringProjects.length,
+      nextBillings: recurringProjects.filter((p) => p.nextBillingDate).slice(0, 4),
     };
   } catch (error) {
     console.error("[admin] não foi possível consultar a base de dados", error);
     return { connected: false as const };
   }
+}
+
+function CardHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <div>
+        <h2 className="font-display text-[15px] font-bold text-navy-700">{title}</h2>
+        {subtitle && <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>}
+      </div>
+      {action}
+    </div>
+  );
+}
+
+function SeeAll({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link href={href} className="inline-flex shrink-0 items-center gap-1 text-[13px] font-semibold text-primary-600 hover:text-primary-700">
+      {children} <ArrowRight className="h-3.5 w-3.5" />
+    </Link>
+  );
+}
+
+function AttentionRow({
+  icon: Icon,
+  tone,
+  label,
+  value,
+  href,
+}: {
+  icon: typeof AlertTriangle;
+  tone: "danger" | "warning" | "neutral";
+  label: string;
+  value: string;
+  href: string;
+}) {
+  const tones = {
+    danger: "bg-red-50 text-red-600",
+    warning: "bg-accent-50 text-accent-600",
+    neutral: "bg-navy-50 text-navy-500",
+  };
+  return (
+    <li>
+      <Link href={href} className="group flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-navy-50/70">
+        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${tones[tone]}`}>
+          <Icon className="h-[18px] w-[18px]" strokeWidth={1.8} />
+        </span>
+        <span className="min-w-0 flex-1 text-sm font-medium text-navy-600">{label}</span>
+        <span className="text-sm font-bold text-navy-700">{value}</span>
+      </Link>
+    </li>
+  );
 }
 
 export default async function AdminDashboardPage({
@@ -209,153 +305,162 @@ export default async function AdminDashboardPage({
 }) {
   const params = await searchParams;
   const period = parsePeriod(params.periodo);
-  const data = await getDashboardData(Number(period));
+  const [data, session] = await Promise.all([getDashboardData(Number(period)), auth()]);
+  const firstName = (session?.user?.name ?? "").split(" ")[0];
 
   return (
-    <div className="p-5 sm:p-6 lg:p-10">
-      <PageHeader title="Dashboard" description="Leads, pedidos e finanças da Kodeza · 3M num só sítio.">
+    <div className="mx-auto max-w-[1400px] p-5 sm:p-6 lg:p-10">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-sm font-medium text-muted-foreground">{todayLabel()}</p>
+          <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-navy-700">
+            {greeting()}
+            {firstName ? `, ${firstName}` : ""}
+          </h1>
+        </div>
         <PeriodFilter current={period} basePath="/admin" />
-      </PageHeader>
+      </div>
 
       {!data.connected ? (
-        <div className="rounded-2xl border border-dashed border-border bg-white p-10 text-center">
-          <Inbox className="mx-auto h-10 w-10 text-muted-foreground" />
+        <div className={`${CARD} text-center`}>
+          <Inbox className="mx-auto h-9 w-9 text-navy-300" />
           <h2 className="mt-4 font-display text-lg font-bold text-navy-700">Base de dados não ligada</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
             Configure <code>DATABASE_URL</code> e execute <code>npm run pd</code> para ver os dados aqui.
           </p>
         </div>
       ) : (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="space-y-5">
+          {/* Indicadores principais */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <KpiCard
+              icon={Wallet}
+              label="Recebido no período"
+              value={formatCurrency(data.receivedPeriod)}
+              hint={`A receber ${formatCurrency(data.toReceive)}`}
+              accent="primary"
+            />
+            <KpiCard
+              icon={Repeat}
+              label="Receita recorrente / mês"
+              value={formatCurrency(data.mrr)}
+              hint={`${data.recurringCount} ${data.recurringCount === 1 ? "contrato activo" : "contratos activos"}`}
+              accent="accent"
+            />
             <KpiCard
               icon={Inbox}
               label="Leads no período"
               value={data.leadsCount}
               delta={data.leadsDelta}
-              hint="Variação face ao período anterior"
-              tone="primary"
+              hint="vs. período anterior"
+              accent="primary"
             />
             <KpiCard
               icon={Target}
               label="Taxa de conversão"
               value={`${data.conversion}%`}
-              hint={`${data.won} lead${data.won === 1 ? "" : "s"} ganho${data.won === 1 ? "" : "s"} no período`}
-              tone="success"
-            />
-            <KpiCard
-              icon={Wallet}
-              label="Recebido no período"
-              value={formatCurrency(data.receivedPeriod)}
-              hint={`A receber: ${formatCurrency(data.toReceive)}`}
-              tone="navy"
-            />
-            <KpiCard
-              icon={Briefcase}
-              label="Pedidos em curso"
-              value={data.openProjects}
-              hint="Backlog, em andamento e em revisão"
-              tone="accent"
-            />
-            <KpiCard
-              icon={Users}
-              label="Clientes"
-              value={data.clientsTotal}
-              hint={`${data.clientsNew} novo${data.clientsNew === 1 ? "" : "s"} no período`}
-              tone="primary"
-            />
-            <KpiCard
-              icon={AlertTriangle}
-              label="Facturas em atraso"
-              value={data.overdueCount}
-              hint={data.overdueCount ? formatCurrency(data.overdueTotal) : "Tudo em dia"}
-              tone={data.overdueCount ? "danger" : "success"}
+              hint={`${data.won} ${data.won === 1 ? "lead ganho" : "leads ganhos"}`}
+              accent="success"
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.5fr_1fr]">
-            <section className="rounded-2xl border border-border bg-white p-6 shadow-soft">
-              <h2 className="font-display text-base font-bold text-navy-700">Leads recebidos</h2>
-              <p className="text-xs text-muted-foreground">Pelo formulário do site</p>
-              <div className="mt-4">
+          {/* Finanças + atenção */}
+          <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.7fr_1fr]">
+            <section className={CARD}>
+              <CardHeader
+                title="Facturado e recebido"
+                subtitle="Últimos 6 meses, em Kwanzas"
+                action={
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-[#D5DEEC]" /> Facturado
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-primary-500" /> Recebido
+                    </span>
+                  </div>
+                }
+              />
+              <div className="mt-5">
+                <RevenueChart data={data.revenue} />
+              </div>
+            </section>
+
+            <section className={CARD}>
+              <CardHeader title="Precisa de atenção" subtitle="O que pode esperar menos" />
+              <ul className="mt-4 space-y-1">
+                <AttentionRow
+                  icon={AlertTriangle}
+                  tone={data.overdueCount ? "danger" : "neutral"}
+                  label="Facturas em atraso"
+                  value={data.overdueCount ? `${data.overdueCount} · ${formatCurrency(data.overdueTotal)}` : "Nenhuma"}
+                  href="/admin/faturas?estado=vencida"
+                />
+                <AttentionRow
+                  icon={Timer}
+                  tone={data.dueWeekCount ? "warning" : "neutral"}
+                  label="Facturas a vencer em 7 dias"
+                  value={String(data.dueWeekCount)}
+                  href="/admin/faturas?estado=pendente"
+                />
+                <AttentionRow
+                  icon={CalendarClock}
+                  tone={data.lateProjects ? "danger" : "neutral"}
+                  label="Pedidos atrasados"
+                  value={String(data.lateProjects)}
+                  href="/admin/notificacoes"
+                />
+              </ul>
+
+              <div className="mt-5 border-t border-border/70 pt-4">
+                <p className="text-xs font-semibold text-muted-foreground">Entregas nos próximos 14 dias</p>
+                {data.dueSoon.length === 0 ? (
+                  <p className="mt-3 text-sm text-muted-foreground">Nenhuma entrega prevista.</p>
+                ) : (
+                  <ul className="mt-2 divide-y divide-border/60">
+                    {data.dueSoon.map((p) => (
+                      <li key={p.id}>
+                        <Link href={`/admin/pedidos/${p.id}`} className="flex items-center justify-between gap-3 py-2.5 text-sm hover:text-primary-700">
+                          <span className="min-w-0">
+                            <span className="block truncate font-medium text-navy-700">{p.title}</span>
+                            <span className="block truncate text-xs text-muted-foreground">{p.client.name}</span>
+                          </span>
+                          <span className="shrink-0 text-xs font-semibold text-accent-600">
+                            {p.dueDate ? formatDateNotTime(p.dueDate) : ""}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </section>
+          </div>
+
+          {/* Leads */}
+          <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.7fr_1fr]">
+            <section className={CARD}>
+              <CardHeader title="Leads recebidos" subtitle="Pelo formulário do site" />
+              <div className="mt-5">
                 <LeadsTrendChart data={data.leadsSeries} />
               </div>
             </section>
-            <section className="rounded-2xl border border-border bg-white p-6 shadow-soft">
-              <h2 className="font-display text-base font-bold text-navy-700">Leads por serviço</h2>
-              <p className="text-xs text-muted-foreground">No período seleccionado</p>
+            <section className={CARD}>
+              <CardHeader title="Leads por serviço" subtitle="No período seleccionado" />
               <div className="mt-4">
                 <ServiceDonut data={data.serviceData} />
               </div>
             </section>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.5fr_1fr]">
-            <section className="rounded-2xl border border-border bg-white p-6 shadow-soft">
-              <h2 className="font-display text-base font-bold text-navy-700">Facturado vs. recebido</h2>
-              <p className="text-xs text-muted-foreground">Últimos 6 meses, em Kwanzas</p>
-              <div className="mt-4">
-                <RevenueChart data={data.revenue} />
-              </div>
-            </section>
-
-            <section className="rounded-2xl border border-border bg-white p-6 shadow-soft">
-              <h2 className="font-display text-base font-bold text-navy-700">Pedidos por fase</h2>
-              <ul className="mt-5 space-y-4">
-                {data.pipeline.map((row) => {
-                  const max = Math.max(...data.pipeline.map((r) => r.total), 1);
-                  return (
-                    <li key={row.status}>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="font-medium text-navy-600">{row.label}</span>
-                        <span className="font-semibold text-navy-700">{row.total}</span>
-                      </div>
-                      <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-navy-50">
-                        <div
-                          className={row.status === "CONCLUIDO" ? "h-full rounded-full bg-emerald-500" : "h-full rounded-full bg-primary-500"}
-                          style={{ width: `${(row.total / max) * 100}%` }}
-                        />
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-
-              <h3 className="mt-8 flex items-center gap-2 text-sm font-bold text-navy-700">
-                <CalendarClock className="h-4 w-4 text-accent-600" /> Entregas nos próximos 14 dias
-              </h3>
-              {data.dueSoon.length === 0 ? (
-                <p className="mt-3 text-sm text-muted-foreground">Nenhuma entrega próxima.</p>
-              ) : (
-                <ul className="mt-3 divide-y divide-border">
-                  {data.dueSoon.map((p) => (
-                    <li key={p.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-                      <span className="min-w-0">
-                        <span className="block truncate font-medium text-navy-700">{p.title}</span>
-                        <span className="block truncate text-xs text-muted-foreground">{p.client.name}</span>
-                      </span>
-                      <span className="shrink-0 text-xs font-semibold text-accent-600">
-                        {p.dueDate ? formatDateNotTime(p.dueDate) : ""}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <section className="rounded-2xl border border-border bg-white p-6 shadow-soft">
-              <div className="flex items-center justify-between">
-                <h2 className="font-display text-base font-bold text-navy-700">Últimos leads</h2>
-                <Link href="/admin/leads" className="inline-flex items-center gap-1 text-sm font-semibold text-primary-600 hover:text-primary-700">
-                  Ver todos <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
+          {/* Listas */}
+          <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
+            <section className={CARD}>
+              <CardHeader title="Últimos leads" action={<SeeAll href="/admin/leads">Ver todos</SeeAll>} />
               {data.latestLeads.length === 0 ? (
                 <p className="mt-6 text-sm text-muted-foreground">Ainda não recebeu leads.</p>
               ) : (
-                <ul className="mt-4 divide-y divide-border">
+                <ul className="mt-3 divide-y divide-border/60">
                   {data.latestLeads.map((lead) => (
                     <li key={lead.id} className="flex items-center justify-between gap-3 py-3">
                       <div className="min-w-0">
@@ -371,30 +476,52 @@ export default async function AdminDashboardPage({
               )}
             </section>
 
-            <section className="rounded-2xl border border-border bg-white p-6 shadow-soft">
-              <div className="flex items-center justify-between">
-                <h2 className="font-display text-base font-bold text-navy-700">Facturas por cobrar</h2>
-                <Link href="/admin/faturas" className="inline-flex items-center gap-1 text-sm font-semibold text-primary-600 hover:text-primary-700">
-                  Ver facturas <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-              {data.overdue.length === 0 ? (
-                <p className="mt-6 text-sm text-muted-foreground">Sem facturas em atraso. Bom trabalho!</p>
+            <section className={CARD}>
+              <CardHeader title="Próximas cobranças recorrentes" action={<SeeAll href="/admin/pedidos">Pedidos</SeeAll>} />
+              {data.nextBillings.length === 0 ? (
+                <p className="mt-6 text-sm text-muted-foreground">
+                  Nenhum pedido recorrente. Marque a cobrança como recorrente ao criar um pedido (ex.: gestão de redes sociais).
+                </p>
               ) : (
-                <ul className="mt-4 divide-y divide-border">
-                  {data.overdue.map((inv) => (
-                    <li key={inv.id} className="flex items-center justify-between gap-3 py-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-navy-700">
-                          {inv.number} · {inv.project.client.name}
-                        </p>
-                        <p className="truncate text-xs text-red-600">Venceu em {formatDateNotTime(inv.dueDate)}</p>
-                      </div>
-                      <span className="shrink-0 text-sm font-bold text-navy-700">{formatCurrency(Number(inv.amount))}</span>
+                <ul className="mt-3 divide-y divide-border/60">
+                  {data.nextBillings.map((p) => (
+                    <li key={p.id}>
+                      <Link href={`/admin/pedidos/${p.id}`} className="flex items-center justify-between gap-3 py-3 hover:text-primary-700">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-navy-700">{p.title}</p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {p.client.name} · {p.nextBillingDate ? formatDateNotTime(p.nextBillingDate) : ""}
+                          </p>
+                        </div>
+                        <span className="shrink-0 text-sm font-bold text-navy-700">{formatCurrency(Number(p.value))}</span>
+                      </Link>
                     </li>
                   ))}
                 </ul>
               )}
+            </section>
+
+            <section className={CARD}>
+              <CardHeader title="Pedidos por fase" subtitle={`${data.openProjects} em curso`} />
+              <ul className="mt-5 space-y-4">
+                {data.pipeline.map((row) => {
+                  const max = Math.max(...data.pipeline.map((r) => r.total), 1);
+                  return (
+                    <li key={row.status}>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium text-navy-600">{row.label}</span>
+                        <span className="font-semibold text-navy-700">{row.total}</span>
+                      </div>
+                      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-navy-50">
+                        <div
+                          className={row.status === "CONCLUIDO" ? "h-full rounded-full bg-emerald-500" : "h-full rounded-full bg-primary-500"}
+                          style={{ width: `${(row.total / max) * 100}%` }}
+                        />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
             </section>
           </div>
         </div>

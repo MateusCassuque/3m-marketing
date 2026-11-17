@@ -49,6 +49,21 @@ Financeiro · Utilizadores (só administradores).
 
 Perfis: **ADMIN** (tudo) e **EDITOR** (só consulta).
 
+## Serviços de assessoria e cobrança recorrente
+
+- **Novos serviços de pedido:** assessoria de visto, bilhetes de passagem e assessoria de passaporte.
+- **Campos próprios por serviço** (formulário de pedido, `lib/service-details.ts`): visto → país e tipo de visto;
+  passaporte → tipo (primeira emissão, renovação, segunda via); bilhetes → origem, destino, ida e volta. Em todos, o
+  sistema pergunta se é **para o cliente do pedido** ou **para outras pessoas** (nome + n.º do passaporte de cada uma,
+  com "adicionar pessoa"). Aparece na página do pedido.
+- **Cobrança recorrente:** no pedido, "Tipo de cobrança → Recorrente" (mensal, 3, 6 ou 12 meses; data da primeira
+  cobrança; prazo de pagamento; data de fim opcional). Em cada data de cobrança o sistema emite sozinho uma factura nova
+  (`lib/recurring-billing.ts`) e avança a data. Pára com o pedido concluído/cancelado. Não duplica mesmo com vários
+  utilizadores ao mesmo tempo. Corre ao abrir o painel, ao guardar o pedido e todos os dias via cron (`vercel.json`
+  → `/api/cron/recurring-invoices`; defina `CRON_SECRET` no ambiente). Nos pedidos recorrentes o valor é o de cada
+  cobrança e não há controlo de parcelas.
+- O dashboard mostra a **receita recorrente mensal** e as próximas cobranças.
+
 ## Facturas
 
 - O número (`FAT-0001`, `FAT-0002`…) vem de um **contador** (`InvoiceCounter`) que só avança. Eliminar uma factura não

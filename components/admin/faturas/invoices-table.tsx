@@ -28,6 +28,8 @@ import { InvoiceViewDialog } from "./invoice-view-dialog"
 export type InvoiceRow = InvoiceFormData & {
   /** Controlo de parcelas (null em facturas antigas ainda sem cálculo). */
   installment: number | null
+  /** Nº da cobrança, se a factura foi gerada por um projecto recorrente. */
+  recurringCycle: number | null
   projectTotal: number | null
   previouslyInvoiced: number | null
   remaining: number | null
@@ -43,6 +45,14 @@ export type InvoiceRow = InvoiceFormData & {
 
 /** "Em falta" de uma factura: valor ainda por facturar do pedido, ou "nada em falta". */
 export function RemainingInfo({ invoice, compact = false }: { invoice: InvoiceRow; compact?: boolean }) {
+  if (invoice.recurringCycle !== null && invoice.status !== "CANCELADA") {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-700">
+        Recorrente <span className="font-medium text-muted-foreground">· n.º {invoice.recurringCycle}</span>
+      </span>
+    )
+  }
+
   if (invoice.status === "CANCELADA" || invoice.remaining === null) {
     return <span className="text-muted-foreground">—</span>
   }

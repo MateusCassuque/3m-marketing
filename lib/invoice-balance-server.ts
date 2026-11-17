@@ -12,8 +12,21 @@ import { computeBalance, round2 } from "@/lib/invoice-balance";
  * Facturas CANCELADAS não contam como facturado.
  */
 export async function recomputeProjectInvoices(tx: Prisma.TransactionClient, projectId: string) {
-  const project = await tx.project.findUnique({ where: { id: projectId }, select: { value: true } });
+  const project = await tx.project.findUnique({
+    where: { id: projectId },
+    select: { value: true, billingType: true },
+  });
   if (!project) return;
+
+  // Nos projectos recorrentes cada factura é uma cobrança periódica independente:
+  // não há "total do pedido" nem "valor em falta" a controlar.
+  if (project.billingType === "RECORRENTE") {
+    await tx.invoice.updateMany({
+      where: { projectId, OR: [{ projectTotal: { not: null } }, { remaining: { not: null } }] },
+      data: { installment: null, projectTotal: null, previouslyInvoiced: null, remaining: null },
+    });
+    return;
+  }
 
   const invoices = await tx.invoice.findMany({
     where: { projectId },

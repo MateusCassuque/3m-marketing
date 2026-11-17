@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { runRecurringBilling } from "@/lib/recurring-billing";
+import { broadcastNotificationsChanged } from "@/lib/realtime";
 import { formatCurrency, formatDateNotTime } from "@/lib/utils";
 import type { AppNotification, NotificationsPayload } from "@/lib/notification-types";
 
@@ -28,6 +30,13 @@ function plural(n: number, one: string, many: string) {
  * Desaparecem sozinhas quando a situação se resolve (factura paga, pedido concluído…).
  */
 export async function getNotifications(adminId: string): Promise<NotificationsPayload> {
+  // Emite as facturas recorrentes que já venceram antes de calcular o que está por cobrar.
+  try {
+    if ((await runRecurringBilling()) > 0) broadcastNotificationsChanged("recurring");
+  } catch (error) {
+    console.error("[notifications] facturação recorrente falhou", error);
+  }
+
   const today = startOfToday();
   const now = new Date();
 

@@ -23,6 +23,7 @@ export function toInvoiceRow(invoice: InvoiceWithRelations): InvoiceRow {
     settlesProject: invoice.settlesProject,
     createdAt: invoice.createdAt,
     installment: invoice.installment,
+    recurringCycle: invoice.recurringCycle,
     projectTotal: invoice.projectTotal === null ? null : Number(invoice.projectTotal),
     previouslyInvoiced: invoice.previouslyInvoiced === null ? null : Number(invoice.previouslyInvoiced),
     remaining: invoice.remaining === null ? null : Number(invoice.remaining),

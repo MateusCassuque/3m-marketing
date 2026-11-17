@@ -42,6 +42,8 @@ export interface ProjectOption {
   title: string;
   value: number;
   client: { name: string };
+  /** Projecto de cobrança recorrente: as facturas são geradas sozinhas, sem controlo de parcelas. */
+  recurring: boolean;
   /** Facturas não canceladas do pedido — servem para calcular o que já foi facturado. */
   invoices: { id: string; amount: number; createdAt: string }[];
 }
@@ -100,7 +102,7 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice, projects }: Inv
     return { sum: list.reduce((acc, inv) => acc + inv.amount, 0), count: list.length };
   }, [project, invoice]);
 
-  const balance = project
+  const balance = project && !project.recurring
     ? computeBalance({
         total: project.value,
         previouslyInvoiced: previous.sum,
@@ -138,7 +140,8 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice, projects }: Inv
       if (chosen) {
         const invoiced = chosen.invoices.reduce((acc, inv) => acc + inv.amount, 0);
         const left = Math.max(chosen.value - invoiced, 0);
-        setValue("amount", left > 0 ? left : chosen.value);
+        // Recorrente: o valor é o de uma cobrança. Único: o que ainda falta facturar.
+        setValue("amount", chosen.recurring ? chosen.value : left > 0 ? left : chosen.value);
       }
     }
   };
@@ -204,6 +207,16 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice, projects }: Inv
             </div>
           </div>
 
+          {project?.recurring && (
+            <div className="rounded-xl border border-primary-200 bg-primary-50/60 p-4 text-sm leading-snug text-primary-900">
+              <p className="font-semibold">Projecto de cobrança recorrente</p>
+              <p className="mt-1 text-primary-800">
+                O sistema emite sozinho uma factura em cada data de cobrança. Esta será uma factura avulsa (por exemplo, um
+                extra) e não entra no controlo de parcelas.
+              </p>
+            </div>
+          )}
+
           {project && balance && (
             <div className="space-y-3 rounded-xl border border-border bg-navy-50/60 p-4 text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -220,6 +233,13 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice, projects }: Inv
                       Cobrar o restante ({formatCurrency(balance.remainingBefore)})
                     </button>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => setValue("amount", project.value, { shouldValidate: true })}
+                    className="rounded-full border border-border bg-white px-2.5 py-1 text-xs font-semibold text-navy-600 hover:bg-navy-50"
+                  >
+                    Total
+                  </button>
                   <button
                     type="button"
                     onClick={() => setValue("amount", project.value / 2, { shouldValidate: true })}

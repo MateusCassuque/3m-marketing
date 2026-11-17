@@ -24,6 +24,15 @@ enum ServiceInterest {
   LANDING_PAGE
   IDENTIDADE_VISUAL
   REGISTO_EMPRESA
+  ASSESSORIA_VISTO
+  BILHETES
+  ASSESSORIA_PASSAPORTE
+}
+
+// Cobrança única, ou recorrente (ex.: gestão mensal de redes sociais).
+enum BillingType {
+  UNICO
+  RECORRENTE
 }
 
 enum LeadStatus {
@@ -132,6 +141,18 @@ model Project {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
+  // Detalhes específicos do serviço (visto, passaporte, bilhetes): país, requerentes, trajecto…
+  // Estrutura validada em lib/service-details.ts.
+  serviceDetails Json?
+
+  // Cobrança recorrente: em cada `nextBillingDate` o sistema emite uma factura nova
+  // (lib/recurring-billing.ts). Nos projectos recorrentes, `value` é o valor de cada cobrança.
+  billingType       BillingType @default(UNICO)
+  recurrenceMonths  Int? // 1 = mensal, 3 = trimestral, 6 = semestral, 12 = anual
+  nextBillingDate   DateTime?
+  recurrenceEndDate DateTime?
+  paymentTermDays   Int         @default(5) // dias entre a emissão e o vencimento
+
   clientId String
   client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
@@ -139,6 +160,7 @@ model Project {
 
   @@index([clientId])
   @@index([status])
+  @@index([billingType, nextBillingDate])
 }
 
 enum InvoiceStatus {
@@ -179,6 +201,7 @@ model Invoice {
   previouslyInvoiced Decimal? @db.Decimal(10, 2) // facturado antes desta factura
   remaining          Decimal? @db.Decimal(10, 2) // valor em falta depois desta factura
   settlesProject     Boolean  @default(false) // "não falta mais nada" marcado manualmente
+  recurringCycle     Int? // nº da cobrança, nas facturas geradas por um projecto recorrente
 
   projectId String
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
