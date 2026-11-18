@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma"
 import { requireAdmin } from "@/lib/require-admin"
 import { recomputeProjectInvoices } from "@/lib/invoice-balance-server"
 import { nextInvoiceNumber } from "@/lib/invoice-number"
+import { advanceProjectAfterPayment } from "@/lib/project-status-automation"
 import { broadcastNotificationsChanged } from "@/lib/realtime"
 import { parseDateOrNull } from "@/lib/serialize"
 import { invoiceSchema, type InvoiceValues } from "@/lib/validations/invoice"
@@ -34,8 +35,12 @@ export async function createInvoice(values: InvoiceValues) {
 
     // Calcula a parcela e o valor em falta (e ajusta as restantes facturas do pedido).
     await recomputeProjectInvoices(tx, parsed.projectId)
+
+    // Factura já criada como paga: o pedido avança de fase sozinho.
+    if (parsed.status === "PAGA") await advanceProjectAfterPayment(tx, parsed.projectId)
   })
 
+  revalidatePath("/admin/pedidos")
   revalidatePath("/admin/faturas")
   revalidatePath("/admin/financeiro")
   revalidatePath("/admin")
@@ -77,8 +82,14 @@ export async function updateInvoice(id: string, values: InvoiceValues) {
     if (existing && existing.projectId !== parsed.projectId) {
       await recomputeProjectInvoices(tx, existing.projectId)
     }
+
+    // Acabou de ser marcada como paga (ou passou a pertencer a outro pedido já pago).
+    if (parsed.status === "PAGA" && (justPaid || (existing && existing.projectId !== parsed.projectId))) {
+      await advanceProjectAfterPayment(tx, parsed.projectId)
+    }
   })
 
+  revalidatePath("/admin/pedidos")
   revalidatePath("/admin/faturas")
   revalidatePath("/admin/financeiro")
   revalidatePath("/admin")

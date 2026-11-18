@@ -64,6 +64,14 @@ Perfis: **ADMIN** (tudo) e **EDITOR** (só consulta).
   cobrança e não há controlo de parcelas.
 - O dashboard mostra a **receita recorrente mensal** e as próximas cobranças.
 
+## Fase do pedido segue os pagamentos
+
+Quando uma factura é paga (criada como paga ou marcada como paga), o pedido avança sozinho
+(`lib/project-status-automation.ts`): **Backlog → Em andamento** no primeiro pagamento e **Em andamento → Em revisão**
+quando a última factura é paga (tudo facturado e nada por pagar). Só avança, nunca recua; cada pagamento faz no máximo
+um passo; não mexe em pedidos concluídos ou cancelados; nos recorrentes só aplica o primeiro passo. A migração
+`20261117120000_project_status_from_payments` põe em "Em andamento" os pedidos que ficaram em Backlog com facturas já pagas.
+
 ## Facturas
 
 - O número (`FAT-0001`, `FAT-0002`…) vem de um **contador** (`InvoiceCounter`) que só avança. Eliminar uma factura não

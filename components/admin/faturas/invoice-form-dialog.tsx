@@ -44,6 +44,8 @@ export interface ProjectOption {
   client: { name: string };
   /** Projecto de cobrança recorrente: as facturas são geradas sozinhas, sem controlo de parcelas. */
   recurring: boolean;
+  /** Fase actual do pedido — para avisar que o pagamento a vai avançar. */
+  status: string;
   /** Facturas não canceladas do pedido — servem para calcular o que já foi facturado. */
   invoices: { id: string; amount: number; createdAt: string }[];
 }
@@ -206,6 +208,18 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice, projects }: Inv
               </Select>
             </div>
           </div>
+
+          {watch("status") === "PAGA" && project?.status === "BACKLOG" && (
+            <p className="rounded-lg bg-emerald-50 px-3 py-2 text-[13px] leading-snug text-emerald-800">
+              Ao guardar como paga, o pedido passa automaticamente de <strong>Backlog</strong> a <strong>Em andamento</strong>.
+            </p>
+          )}
+          {watch("status") === "PAGA" && project?.status === "EM_ANDAMENTO" && !project.recurring && (
+            <p className="rounded-lg bg-emerald-50 px-3 py-2 text-[13px] leading-snug text-emerald-800">
+              Se esta for a última factura do pedido (tudo facturado e pago), o pedido passa automaticamente a{" "}
+              <strong>Em revisão</strong>.
+            </p>
+          )}
 
           {project?.recurring && (
             <div className="rounded-xl border border-primary-200 bg-primary-50/60 p-4 text-sm leading-snug text-primary-900">

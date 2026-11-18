@@ -112,6 +112,7 @@ export default async function FaturasPage({
     value: Number(project.value),
     client: { name: project.client.name },
     recurring: project.billingType === "RECORRENTE",
+    status: project.status,
     invoices: project.invoices.map((inv) => ({
       id: inv.id,
       amount: Number(inv.amount),
