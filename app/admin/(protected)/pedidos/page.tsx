@@ -108,7 +108,7 @@ export default async function PedidosPage({
           params={{ q, ...range.params }}
           className="mb-0 min-w-0"
         />
-        <DateRangeFilter current={range} className="shrink-0 self-start lg:self-auto" />
+        <DateRangeFilter current={range} className="shrink-0 self-auto lg:self-auto" />
       </div>
       <ProjectsTable
         projects={rows}

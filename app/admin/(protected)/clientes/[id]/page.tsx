@@ -62,7 +62,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         <EditClientButton client={client} />
       </PageHeader>
 
-      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+      <div className="grid sm:grid-cols-2 gap-4 xl:grid-cols-4">
         <Stat label="Pedidos" value={client.projects.length} />
         <Stat label="Facturado" value={formatCurrency(totals.invoiced)} />
         <Stat label="Recebido" value={formatCurrency(totals.received)} tone="success" />
