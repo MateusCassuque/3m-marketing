@@ -24,6 +24,8 @@ interface ClientFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   client?: Client | null;
+  /** Chamado depois de criar um cliente novo (para o seleccionar noutro formulário). */
+  onCreated?: (client: Client) => void;
 }
 
 const EMPTY_VALUES: ClientValues = {
@@ -36,7 +38,7 @@ const EMPTY_VALUES: ClientValues = {
   notes: "",
 };
 
-export function ClientFormDialog({ open, onOpenChange, client }: ClientFormDialogProps) {
+export function ClientFormDialog({ open, onOpenChange, client, onCreated }: ClientFormDialogProps) {
   const isEditing = Boolean(client);
 
   const {
@@ -55,7 +57,7 @@ export function ClientFormDialog({ open, onOpenChange, client }: ClientFormDialo
         client
           ? {
               name: client.name,
-              email: client.email,
+              email: client.email ?? "",
               phone: client.phone ?? "",
               company: client.company ?? "",
               taxId: client.taxId ?? "",
@@ -71,7 +73,8 @@ export function ClientFormDialog({ open, onOpenChange, client }: ClientFormDialo
     if (isEditing && client) {
       await updateClient(client.id, values);
     } else {
-      await createClient(values);
+      const created = await createClient(values);
+      onCreated?.(created);
     }
     onOpenChange(false);
   };
@@ -91,12 +94,12 @@ export function ClientFormDialog({ open, onOpenChange, client }: ClientFormDialo
         <form onSubmit={handleSubmit(onSubmit)} className="mt-2 space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="name">Nome</Label>
+              <Label htmlFor="name">Nome *</Label>
               <Input id="name" {...register("name")} />
               {errors.name && <p className="text-xs font-medium text-destructive">{errors.name.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="email">E-mail</Label>
+              <Label htmlFor="email">E-mail (opcional)</Label>
               <Input id="email" type="email" {...register("email")} />
               {errors.email && <p className="text-xs font-medium text-destructive">{errors.email.message}</p>}
             </div>
@@ -104,18 +107,19 @@ export function ClientFormDialog({ open, onOpenChange, client }: ClientFormDialo
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="phone">Telefone</Label>
-              <Input id="phone" {...register("phone")} />
+              <Label htmlFor="phone">Telefone *</Label>
+              <Input id="phone" type="tel" placeholder="+244 900 000 000" {...register("phone")} />
+              {errors.phone && <p className="text-xs font-medium text-destructive">{errors.phone.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="company">Empresa</Label>
+              <Label htmlFor="company">Empresa (opcional)</Label>
               <Input id="company" {...register("company")} />
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="taxId">CNPJ / NIF</Label>
+              <Label htmlFor="taxId">NIF (opcional)</Label>
               <Input id="taxId" {...register("taxId")} />
             </div>
             <div className="space-y-1.5">

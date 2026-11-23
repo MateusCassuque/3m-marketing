@@ -82,13 +82,23 @@ export async function createProject(values: ProjectValues) {
 
   const project = await prisma.project.create({
     data: { ...data, completedAt: parsed.status === "CONCLUIDO" ? new Date() : null },
-    select: { id: true },
+    select: { id: true, title: true, value: true, status: true, billingType: true, clientId: true },
   });
 
   // Projecto recorrente com a primeira cobrança já a vencer: emite a factura logo.
   if (data.billingType === "RECORRENTE") await runRecurringBilling({ projectId: project.id });
 
   refresh();
+
+  // Devolve o pedido criado para os formulários (ex.: nova factura) o seleccionarem logo.
+  return {
+    id: project.id,
+    title: project.title,
+    value: Number(project.value),
+    status: project.status,
+    billingType: project.billingType,
+    clientId: project.clientId,
+  };
 }
 
 export async function updateProject(id: string, values: ProjectValues) {

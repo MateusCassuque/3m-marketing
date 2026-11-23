@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircle2, Loader2, TriangleAlert } from "lucide-react";
+import { CheckCircle2, Loader2, Plus, TriangleAlert } from "lucide-react";
+import type { Client } from "@prisma/client";
 
 import {
   Dialog,
@@ -21,6 +22,9 @@ import { invoiceSchema, type InvoiceValues, INVOICE_STATUS_VALUES } from "@/lib/
 import { INVOICE_STATUS_LABELS } from "@/lib/invoice-labels";
 import { computeBalance } from "@/lib/invoice-balance";
 import { formatCurrency } from "@/lib/utils";
+import type { AccountOption } from "@/lib/accounts";
+import { PaymentAccountDialog } from "@/components/admin/faturas/payment-account-dialog";
+import { ProjectFormDialog } from "@/components/admin/pedidos/project-form-dialog";
 import { createInvoice, updateInvoice } from "@/app/admin/(protected)/faturas/actions";
 
 export interface InvoiceFormData {
@@ -35,6 +39,8 @@ export interface InvoiceFormData {
   notes: string | null;
   settlesProject: boolean;
   createdAt: Date;
+  accountId: string | null;
+  paidAt: Date | null;
 }
 
 export interface ProjectOption {
@@ -55,6 +61,11 @@ interface InvoiceFormDialogProps {
   onOpenChange: (open: boolean) => void;
   invoice?: InvoiceFormData | null;
   projects: ProjectOption[];
+  /** Clientes e contas: permitem criar pedido/cliente/conta sem sair do formulário. */
+  clients: Client[];
+  accounts: AccountOption[];
+  /** Pedido já seleccionado (ex.: ao emitir a factura a partir do próprio pedido). */
+  defaultProjectId?: string;
 }
 
 const EMPTY_VALUES: InvoiceValues = {
@@ -66,14 +77,31 @@ const EMPTY_VALUES: InvoiceValues = {
   paymentMethod: "",
   notes: "",
   settlesProject: false,
+  accountId: "",
+  paidAt: "",
 };
 
 function toDateInputValue(date: Date) {
   return new Date(date).toISOString().slice(0, 10);
 }
 
-export function InvoiceFormDialog({ open, onOpenChange, invoice, projects }: InvoiceFormDialogProps) {
+export function InvoiceFormDialog({
+  open,
+  onOpenChange,
+  invoice,
+  projects,
+  clients,
+  accounts,
+  defaultProjectId,
+}: InvoiceFormDialogProps) {
   const isEditing = Boolean(invoice);
+
+  // Pedidos criados aqui mesmo ficam logo disponíveis (o servidor actualiza as listas a seguir).
+  const [localProjects, setLocalProjects] = useState<ProjectOption[]>([]);
+  const [projectDialogOpen, setProjectDialogOpen] = useState(false);
+  const [paymentOpen, setPaymentOpen] = useState(false);
+  const [pendingValues, setPendingValues] = useState<InvoiceValues | null>(null);
+  const allProjects = [...projects, ...localProjects.filter((lp) => !projects.some((p) => p.id === lp.id))];
 
   const {
     register,
@@ -91,7 +119,7 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice, projects }: Inv
   const watchedAmount = Number(watch("amount")) || 0;
   const settles = Boolean(watch("settlesProject"));
 
-  const project = projects.find((p) => p.id === selectedProjectId);
+  const project = allProjects.find((p) => p.id === selectedProjectId);
 
   // Facturas anteriores do pedido: todas, ou — ao editar — só as criadas antes desta.
   const previous = useMemo(() => {
@@ -126,40 +154,64 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice, projects }: Inv
             paymentMethod: invoice.paymentMethod ?? "",
             notes: invoice.notes ?? "",
             settlesProject: invoice.settlesProject,
+            accountId: invoice.accountId ?? "",
+            paidAt: invoice.paidAt ? toDateInputValue(invoice.paidAt) : "",
           }
           : EMPTY_VALUES,
       );
-    }
-  }, [open, invoice, reset]);
 
-  // Conveniência: ao escolher o pedido numa fatura nova, sugere o valor do pedido.
-  const handleProjectChange = (projectId: string) => {
-    setValue("projectId", projectId);
-    setValue("settlesProject", false);
-    if (!isEditing) {
-      // Sugere o que ainda falta facturar (ou o total, se for a primeira factura).
-      const chosen = projects.find((p) => p.id === projectId);
-      if (chosen) {
-        const invoiced = chosen.invoices.reduce((acc, inv) => acc + inv.amount, 0);
-        const left = Math.max(chosen.value - invoiced, 0);
-        // Recorrente: o valor é o de uma cobrança. Único: o que ainda falta facturar.
-        setValue("amount", chosen.recurring ? chosen.value : left > 0 ? left : chosen.value);
+      // Factura nova a partir de um pedido: já vem seleccionado, com o valor sugerido.
+      if (!invoice && defaultProjectId) {
+        const chosen = projects.find((p) => p.id === defaultProjectId);
+        if (chosen) selectProject(chosen);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, invoice, reset, defaultProjectId]);
+
+  // Ao escolher o pedido numa factura nova, sugere o valor: o que falta facturar (ou o de uma cobrança, se recorrente).
+  function selectProject(chosen: ProjectOption) {
+    setValue("projectId", chosen.id, { shouldValidate: true });
+    setValue("settlesProject", false);
+    if (!isEditing) {
+      const invoiced = chosen.invoices.reduce((acc, inv) => acc + inv.amount, 0);
+      const left = Math.max(chosen.value - invoiced, 0);
+      setValue("amount", chosen.recurring ? chosen.value : left > 0 ? left : chosen.value);
+    }
+  }
+
+  const handleProjectChange = (projectId: string) => {
+    const chosen = allProjects.find((p) => p.id === projectId);
+    if (chosen) selectProject(chosen);
+    else setValue("projectId", projectId);
   };
 
-  const onSubmit = async (values: InvoiceValues) => {
+  const save = async (values: InvoiceValues) => {
     if (isEditing && invoice) {
       await updateInvoice(invoice.id, values);
     } else {
       await createInvoice(values);
     }
+    setPaymentOpen(false);
+    setPendingValues(null);
     onOpenChange(false);
   };
 
+  const onSubmit = async (values: InvoiceValues) => {
+    // Factura paga sem conta indicada: pergunta primeiro onde o dinheiro entrou.
+    const alreadyHasAccount = Boolean(invoice && invoice.status === "PAGA" && invoice.accountId);
+    if (values.status === "PAGA" && !values.accountId && !alreadyHasAccount) {
+      setPendingValues(values);
+      setPaymentOpen(true);
+      return;
+    }
+    await save(values);
+  };
+
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[92vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? `Editar fatura ${invoice?.number}` : "Nova fatura"}</DialogTitle>
           <DialogDescription>
@@ -171,14 +223,24 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice, projects }: Inv
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-2 space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="projectId">Pedido</Label>
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="projectId">Pedido</Label>
+              <button
+                type="button"
+                onClick={() => setProjectDialogOpen(true)}
+                className="inline-flex items-center gap-1 rounded-md text-xs font-semibold text-primary-700 hover:text-primary-800 hover:underline"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Novo pedido
+              </button>
+            </div>
             <Select
               id="projectId"
               value={selectedProjectId}
               onChange={(event) => handleProjectChange(event.target.value)}
             >
               <option value="">Selecione…</option>
-              {projects.map((project) => (
+              {allProjects.map((project) => (
                 <option key={project.id} value={project.id}>
                   {project.title} — {project.client.name}
                 </option>
@@ -353,5 +415,39 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice, projects }: Inv
         </form>
       </DialogContent>
     </Dialog>
+
+    {/* Irmãos do pop-up principal (não filhos do <form>): os eventos de submit não sobem para a factura. */}
+    <ProjectFormDialog
+      open={projectDialogOpen}
+      onOpenChange={setProjectDialogOpen}
+      clients={clients}
+      onCreated={(created) => {
+        const option: ProjectOption = {
+          id: created.id,
+          title: created.title,
+          value: created.value,
+          client: { name: created.clientName },
+          recurring: created.billingType === "RECORRENTE",
+          status: created.status,
+          invoices: [],
+        };
+        setLocalProjects((current) => [...current, option]);
+        selectProject(option);
+      }}
+    />
+
+    <PaymentAccountDialog
+      open={paymentOpen}
+      onOpenChange={(next) => {
+        setPaymentOpen(next);
+        if (!next) setPendingValues(null);
+      }}
+      accounts={accounts}
+      subject={pendingValues ? `Factura de ${formatCurrency(Number(pendingValues.amount))}` : undefined}
+      onConfirm={async ({ accountId, paidAt }) => {
+        if (pendingValues) await save({ ...pendingValues, accountId, paidAt });
+      }}
+    />
+    </>
   );
 }

@@ -15,10 +15,10 @@ export async function createClient(values: ClientValues) {
   await requireAdmin();
   const parsed = clientSchema.parse(values);
 
-  await prisma.client.create({
+  const client = await prisma.client.create({
     data: {
       name: parsed.name,
-      email: parsed.email,
+      email: clean(parsed.email),
       phone: clean(parsed.phone),
       company: clean(parsed.company),
       taxId: clean(parsed.taxId),
@@ -28,8 +28,13 @@ export async function createClient(values: ClientValues) {
   });
 
   revalidatePath("/admin/clientes");
+  revalidatePath("/admin/pedidos");
+  revalidatePath("/admin/faturas");
   revalidatePath("/admin/clientes/[id]", "page");
   revalidatePath("/admin/pedidos/[id]", "page");
+
+  // Devolve o cliente criado para os formulários poderem seleccioná-lo logo.
+  return client;
 }
 
 export async function updateClient(id: string, values: ClientValues) {
@@ -40,7 +45,7 @@ export async function updateClient(id: string, values: ClientValues) {
     where: { id },
     data: {
       name: parsed.name,
-      email: parsed.email,
+      email: clean(parsed.email),
       phone: clean(parsed.phone),
       company: clean(parsed.company),
       taxId: clean(parsed.taxId),

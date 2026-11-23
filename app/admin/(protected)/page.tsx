@@ -18,7 +18,8 @@ import { formatCurrency, formatDateNotTime } from "@/lib/utils";
 import { SERVICE_LABELS, STATUS_BADGE_VARIANT, STATUS_LABELS } from "@/lib/lead-labels";
 import { PROJECT_STATUS_LABELS } from "@/lib/project-labels";
 import { Badge } from "@/components/ui/badge";
-import { PeriodFilter, parsePeriod } from "@/components/admin/period-filter";
+import { DateRangeFilter } from "@/components/admin/date-range-filter";
+import { previousRange, rangeWhere, resolveRange, type ResolvedRange } from "@/lib/date-range";
 import { KpiCard } from "@/components/admin/dashboard/kpi-card";
 import { LeadsTrendChart, RevenueChart, ServiceDonut } from "@/components/admin/dashboard/overview-charts";
 
@@ -55,7 +56,7 @@ function todayLabel() {
 }
 
 /** Agrupa leads em pontos do gráfico: diário (≤30d), semanal (90d) ou mensal (12m). */
-function buildLeadsSeries(dates: Date[], days: number, now: Date) {
+function buildLeadsSeries(dates: Date[], days: number, now: Date /* fim do período */) {
   const buckets: { label: string; start: number; end: number; leads: number }[] = [];
 
   if (days <= 30) {
@@ -90,16 +91,20 @@ function buildLeadsSeries(dates: Date[], days: number, now: Date) {
   return buckets.map(({ label, leads }) => ({ label, leads }));
 }
 
-async function getDashboardData(days: number) {
+async function getDashboardData(range: ResolvedRange) {
   try {
     // Emite primeiro as cobranças recorrentes já vencidas, para os números estarem certos.
     await runRecurringBilling().catch((error) => console.error("[dashboard] facturação recorrente falhou", error));
 
     const now = new Date();
     const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const since = new Date(now.getTime() - days * DAY_MS);
-    const previousSince = new Date(since.getTime() - days * DAY_MS);
+    const filter = rangeWhere(range);
+    const previous = previousRange(range);
     const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+
+    // Duração do período e fim do gráfico de leads ("tudo" = últimos 12 meses).
+    const spanDays = range.from && range.to ? Math.max(1, Math.round((range.to.getTime() - range.from.getTime()) / DAY_MS)) : 365;
+    const seriesEnd = range.to ? new Date(range.to.getTime() - DAY_MS) : now;
 
     const [
       leadsPeriod,
@@ -108,14 +113,15 @@ async function getDashboardData(days: number) {
       dueSoon,
       lateProjects,
       invoices,
+      receivedAgg,
       latestLeads,
       recurringProjects,
     ] = await Promise.all([
       prisma.lead.findMany({
-        where: { createdAt: { gte: since } },
+        where: filter ? { createdAt: filter } : {},
         select: { createdAt: true, status: true, service: true },
       }),
-      prisma.lead.count({ where: { createdAt: { gte: previousSince, lt: since } } }),
+      previous ? prisma.lead.count({ where: { createdAt: previous } }) : Promise.resolve(null),
       prisma.project.groupBy({ by: ["status"], _count: { _all: true } }),
       prisma.project.findMany({
         where: {
@@ -143,6 +149,10 @@ async function getDashboardData(days: number) {
           dueDate: true,
           paidAt: true,
         },
+      }),
+      prisma.invoice.aggregate({
+        where: { status: "PAGA", ...(filter ? { paidAt: filter } : {}) },
+        _sum: { amount: true },
       }),
       prisma.lead.findMany({ orderBy: { createdAt: "desc" }, take: 5 }),
       prisma.project.findMany({
@@ -178,14 +188,13 @@ async function getDashboardData(days: number) {
     }));
 
     // ---- Facturas ----
-    let receivedPeriod = 0;
+    const receivedPeriod = Number(receivedAgg._sum.amount ?? 0);
     let toReceive = 0;
     let overdueCount = 0;
     let overdueTotal = 0;
     let dueWeekCount = 0;
     invoices.forEach((inv) => {
       const amount = Number(inv.amount);
-      if (inv.status === "PAGA" && inv.paidAt && inv.paidAt >= since) receivedPeriod += amount;
       if (inv.status === "PENDENTE" || inv.status === "VENCIDA") {
         toReceive += amount;
         if (inv.status === "VENCIDA" || inv.dueDate < startToday) {
@@ -221,7 +230,7 @@ async function getDashboardData(days: number) {
     return {
       connected: true as const,
       leadsCount: leadsPeriod.length,
-      leadsDelta: pct(leadsPeriod.length, leadsPrevious),
+      leadsDelta: leadsPrevious === null ? null : pct(leadsPeriod.length, leadsPrevious),
       conversion,
       won,
       openProjects,
@@ -235,7 +244,7 @@ async function getDashboardData(days: number) {
       dueWeekCount,
       revenue,
       serviceData,
-      leadsSeries: buildLeadsSeries(leadsPeriod.map((l) => l.createdAt), days, now),
+      leadsSeries: buildLeadsSeries(leadsPeriod.map((l) => l.createdAt), spanDays, seriesEnd),
       latestLeads,
       mrr,
       recurringCount: recurringProjects.length,
@@ -304,8 +313,8 @@ export default async function AdminDashboardPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = await searchParams;
-  const period = parsePeriod(params.periodo);
-  const [data, session] = await Promise.all([getDashboardData(Number(period)), auth()]);
+  const range = resolveRange(params, "30");
+  const [data, session] = await Promise.all([getDashboardData(range), auth()]);
   const firstName = (session?.user?.name ?? "").split(" ")[0];
 
   return (
@@ -318,7 +327,7 @@ export default async function AdminDashboardPage({
             {firstName ? `, ${firstName}` : ""}
           </h1>
         </div>
-        <PeriodFilter current={period} basePath="/admin" />
+        <DateRangeFilter current={range} />
       </div>
 
       {!data.connected ? (

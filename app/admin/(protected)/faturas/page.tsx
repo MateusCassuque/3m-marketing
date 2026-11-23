@@ -7,6 +7,10 @@ import { toInvoiceRow } from "@/lib/invoice-rows";
 import { runRecurringBilling } from "@/lib/recurring-billing";
 import { firstParam, hasKey, paginate, parsePage } from "@/lib/pagination";
 import { PageHeader } from "@/components/admin/page-header";
+import { DateRangeFilter } from "@/components/admin/date-range-filter";
+import { resolveRange, rangeWhere } from "@/lib/date-range";
+import { getAccountOptions } from "@/lib/accounts";
+import { PROJECT_OPTION_INCLUDE, toProjectOption } from "@/lib/project-options";
 import { StatusChips } from "@/components/admin/status-chips";
 import { InvoicesTable, type InvoiceRow } from "@/components/admin/faturas/invoices-table";
 import type { ProjectOption } from "@/components/admin/faturas/invoice-form-dialog";
@@ -54,13 +58,18 @@ export default async function FaturasPage({
       }
     : {};
 
+  // Período (data de emissão): hoje, semana, mês, últimos N dias, ano ou calendário.
+  const range = resolveRange(params, "tudo");
+  const issueFilter = rangeWhere(range);
+  const dateWhere: Prisma.InvoiceWhereInput = issueFilter ? { issueDate: issueFilter } : {};
+
   const where: Prisma.InvoiceWhereInput = {
-    AND: [searchWhere, estado ? ESTADOS[estado].where : {}],
+    AND: [searchWhere, dateWhere, estado ? ESTADOS[estado].where : {}],
   };
 
   const [totalAll, ...stateCounts] = await Promise.all([
-    prisma.invoice.count(),
-    ...Object.values(ESTADOS).map((e) => prisma.invoice.count({ where: e.where })),
+    prisma.invoice.count({ where: dateWhere }),
+    ...Object.values(ESTADOS).map((e) => prisma.invoice.count({ where: { AND: [dateWhere, e.where] } })),
   ]);
   const chips = [
     { value: "", label: "Todas", count: totalAll },
@@ -70,65 +79,50 @@ export default async function FaturasPage({
   const total = await prisma.invoice.count({ where });
   const { page, totalPages, skip, take } = paginate(total, parsePage(params.page));
 
-  const [invoices, projects] = await Promise.all([
+  const [invoices, projects, clients, accounts] = await Promise.all([
     prisma.invoice.findMany({
       where,
       include: {
         project: {
           select: {
-            title: true, client: {
-              select: {
-                name: true,
-                address: true,
-                company: true,
-                phone: true,
-              }
-            }
-          }
-        }
+            title: true,
+            client: { select: { name: true, address: true, company: true, phone: true } },
+          },
+        },
       },
       orderBy: { issueDate: "desc" },
       skip,
       take,
     }),
-    prisma.project.findMany({
-      include: {
-        client: { select: { name: true } },
-        invoices: {
-          where: { status: { not: "CANCELADA" } },
-          select: { id: true, amount: true, createdAt: true },
-          orderBy: { createdAt: "asc" },
-        },
-      },
-      orderBy: { title: "asc" },
-    }),
+    prisma.project.findMany({ include: PROJECT_OPTION_INCLUDE, orderBy: { title: "asc" } }),
+    prisma.client.findMany({ orderBy: { name: "asc" } }),
+    getAccountOptions(),
   ]);
 
   const invoiceRows: InvoiceRow[] = invoices.map(toInvoiceRow);
-
-  const projectOptions: ProjectOption[] = projects.map((project) => ({
-    id: project.id,
-    title: project.title,
-    value: Number(project.value),
-    client: { name: project.client.name },
-    recurring: project.billingType === "RECORRENTE",
-    status: project.status,
-    invoices: project.invoices.map((inv) => ({
-      id: inv.id,
-      amount: Number(inv.amount),
-      createdAt: inv.createdAt.toISOString(),
-    })),
-  }));
+  const projectOptions: ProjectOption[] = projects.map(toProjectOption);
 
   return (
     <div className="p-5 sm:p-6 lg:p-10">
       <PageHeader title="Facturas" description="Emita e acompanhe as facturas de cada pedido." />
-      <StatusChips basePath="/admin/faturas" chips={chips} current={estado} params={{ q }} />
+      <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <StatusChips
+          basePath="/admin/faturas"
+          chips={chips}
+          current={estado}
+          params={{ q, ...range.params }}
+          className="mb-0 min-w-0"
+        />
+        <DateRangeFilter current={range} className="shrink-0 self-start lg:self-auto" />
+      </div>
       <InvoicesTable
         invoices={invoiceRows}
         projects={projectOptions}
+        clients={clients}
+        accounts={accounts}
         q={q}
         estado={estado}
+        range={range.params}
         page={page}
         totalPages={totalPages}
         total={total}

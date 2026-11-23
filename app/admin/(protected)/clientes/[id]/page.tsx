@@ -74,9 +74,13 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           <Section title="Dados do cliente">
             <dl className="divide-y divide-border px-6 py-2">
               <DefinitionRow label="E-mail">
-                <a href={`mailto:${client.email}`} className="break-all text-primary-700 hover:underline">
-                  {client.email}
-                </a>
+                {client.email ? (
+                  <a href={`mailto:${client.email}`} className="break-all text-primary-700 hover:underline">
+                    {client.email}
+                  </a>
+                ) : (
+                  "—"
+                )}
               </DefinitionRow>
               <DefinitionRow label="Telefone">
                 {client.phone ? (

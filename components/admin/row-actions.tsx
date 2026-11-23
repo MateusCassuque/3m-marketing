@@ -48,7 +48,7 @@ export function RowActions({ actions, subject }: { actions: RowAction[]; subject
 /** Botões com texto, grandes para o toque — para os cartões no telemóvel. */
 export function CardActions({ actions, subject }: { actions: RowAction[]; subject: string }) {
   return (
-    <div className="mt-4 grid gap-2" style={{ gridTemplateColumns: `repeat(${actions.length}, minmax(0, 1fr))` }}>
+    <div className="mt-4 grid gap-2" style={{ gridTemplateColumns: `repeat(${actions.length <= 3 ? actions.length : 2}, minmax(0, 1fr))` }}>
       {actions.map(({ label, icon: Icon, onClick, tone = "default", disabled }) => (
         <button
           key={label}

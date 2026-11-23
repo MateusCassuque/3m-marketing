@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { CalendarClock, Eye, Pencil, Plus, Trash2 } from "lucide-react"
+import { BadgeCheck, CalendarClock, Eye, Pencil, Plus, Trash2 } from "lucide-react"
+import type { Client } from "@prisma/client"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -20,7 +21,9 @@ import {
   STICKY_TH,
   type RowAction,
 } from "@/components/admin/row-actions"
-import { deleteInvoice } from "@/app/admin/(protected)/faturas/actions"
+import { PaymentAccountDialog } from "@/components/admin/faturas/payment-account-dialog"
+import type { AccountOption } from "@/lib/accounts"
+import { deleteInvoice, markInvoicePaid } from "@/app/admin/(protected)/faturas/actions"
 import { INVOICE_STATUS_LABELS, INVOICE_STATUS_BADGE } from "@/lib/invoice-labels"
 import { formatCurrency, formatDateNotTime } from "@/lib/utils"
 import { InvoiceViewDialog } from "./invoice-view-dialog"
@@ -81,19 +84,24 @@ function isOverdue(invoice: InvoiceRow) {
 interface InvoicesTableProps {
   invoices: InvoiceRow[]
   projects: ProjectOption[]
+  clients: Client[]
+  accounts: AccountOption[]
   q: string
   estado: string
+  /** Período em uso (?periodo=&de=&ate=) — mantém-se ao pesquisar e paginar. */
+  range: { periodo?: string; de?: string; ate?: string }
   page: number
   totalPages: number
   total: number
 }
 
-export function InvoicesTable({ invoices, projects, q, estado, page, totalPages, total }: InvoicesTableProps) {
+export function InvoicesTable({ invoices, projects, clients, accounts, q, estado, range, page, totalPages, total }: InvoicesTableProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingInvoice, setEditingInvoice] = useState<InvoiceRow | null>(null)
   const [viewDialogOpen, setViewDialogOpen] = useState(false)
   const [viewingInvoice, setViewingInvoice] = useState<InvoiceRow | null>(null)
   const [busy, setBusy] = useState(false)
+  const [payingInvoice, setPayingInvoice] = useState<InvoiceRow | null>(null)
 
   const handleNew = () => {
     setEditingInvoice(null)
@@ -126,6 +134,9 @@ export function InvoicesTable({ invoices, projects, q, estado, page, totalPages,
   }
 
   const actionsFor = (invoice: InvoiceRow): RowAction[] => [
+    ...(invoice.status === "PENDENTE" || invoice.status === "VENCIDA"
+      ? [{ label: "Marcar paga", icon: BadgeCheck, tone: "primary" as const, onClick: () => setPayingInvoice(invoice) }]
+      : []),
     { label: "Ver", icon: Eye, onClick: () => handleView(invoice) },
     { label: "Editar", icon: Pencil, tone: "primary", onClick: () => handleEdit(invoice) },
     { label: "Eliminar", icon: Trash2, tone: "danger", disabled: busy, onClick: () => handleDelete(invoice) },
@@ -140,7 +151,7 @@ export function InvoicesTable({ invoices, projects, q, estado, page, totalPages,
   return (
     <div className="rounded-2xl border border-border bg-white shadow-soft">
       <div className="flex flex-col gap-3 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
-        <SearchForm q={q} basePath="/admin/faturas" hidden={{ estado }} placeholder="Pesquisar por número, pedido ou cliente…" />
+        <SearchForm q={q} basePath="/admin/faturas" hidden={{ estado, ...range }} placeholder="Pesquisar por número, pedido ou cliente…" />
         <Button variant="teal" onClick={handleNew} className="w-full sm:w-auto">
           <Plus className="h-4 w-4" />
           Nova factura
@@ -225,13 +236,26 @@ export function InvoicesTable({ invoices, projects, q, estado, page, totalPages,
         </>
       )}
 
-      <Pagination basePath="/admin/faturas" page={page} totalPages={totalPages} total={total} params={{ q, estado }} />
+      <Pagination basePath="/admin/faturas" page={page} totalPages={totalPages} total={total} params={{ q, estado, ...range }} />
 
       <InvoiceFormDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         invoice={editingInvoice}
         projects={projects}
+        clients={clients}
+        accounts={accounts}
+      />
+
+      <PaymentAccountDialog
+        open={Boolean(payingInvoice)}
+        onOpenChange={(next) => !next && setPayingInvoice(null)}
+        accounts={accounts}
+        subject={payingInvoice ? `${payingInvoice.number} · ${formatCurrency(payingInvoice.amount)}` : undefined}
+        onConfirm={async ({ accountId, paidAt }) => {
+          if (payingInvoice) await markInvoicePaid(payingInvoice.id, { accountId, paidAt })
+          setPayingInvoice(null)
+        }}
       />
 
       <InvoiceViewDialog

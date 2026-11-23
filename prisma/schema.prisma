@@ -98,7 +98,7 @@ model NotificationRead {
 model Client {
   id        String    @id @default(cuid())
   name      String
-  email     String
+  email     String? // opcional: só nome e telefone são obrigatórios
   phone     String?
   company   String?
   taxId     String?
@@ -157,6 +157,7 @@ model Project {
   client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   invoices Invoice[]
+  expenses Expense[]
 
   @@index([clientId])
   @@index([status])
@@ -203,10 +204,68 @@ model Invoice {
   settlesProject     Boolean  @default(false) // "não falta mais nada" marcado manualmente
   recurringCycle     Int? // nº da cobrança, nas facturas geradas por um projecto recorrente
 
+  // Onde o dinheiro entrou quando a factura foi paga.
+  accountId String?
+  account   Account? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+
   projectId String
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([projectId])
+  @@index([accountId])
   @@index([status])
   @@index([dueDate])
+}
+
+
+// ---------- Finanças: contas e despesas ----------
+
+// Onde está o dinheiro: bancos, carteiras digitais (ex.: PayPay), caixa…
+model Account {
+  id             String   @id @default(cuid())
+  name           String // descrição, ex.: "Conta BAI — Kodeza"
+  bankName       String? // banco / tipo: BAI, BFA, PayPay, Caixa…
+  accountNumber  String?
+  openingBalance Decimal  @default(0) @db.Decimal(14, 2) // saldo ao começar a usar o sistema
+  active         Boolean  @default(true)
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  invoices Invoice[]
+  expenses Expense[]
+}
+
+enum ExpenseCategory {
+  SALARIOS
+  RENDA
+  FERRAMENTAS
+  MARKETING
+  TRANSPORTE
+  IMPOSTOS
+  EQUIPAMENTO
+  SERVICOS_TERCEIROS
+  OUTROS
+}
+
+model Expense {
+  id          String          @id @default(cuid())
+  description String
+  amount      Decimal         @db.Decimal(12, 2)
+  date        DateTime
+  category    ExpenseCategory @default(OUTROS)
+  supplier    String?
+  notes       String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  // De que conta saiu o dinheiro, e (opcional) a que pedido se refere.
+  accountId String?
+  account   Account? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([date])
+  @@index([accountId])
+  @@index([projectId])
 }

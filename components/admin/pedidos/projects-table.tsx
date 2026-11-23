@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { Client } from "@prisma/client";
-import { CalendarClock, Pencil, Plus, Repeat, Trash2, User } from "lucide-react";
+import { CalendarClock, Pencil, Plus, Receipt, Repeat, Trash2, User } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,11 @@ import {
   STICKY_TH,
   type RowAction,
 } from "@/components/admin/row-actions";
+import {
+  InvoiceFormDialog,
+  type ProjectOption,
+} from "@/components/admin/faturas/invoice-form-dialog";
+import type { AccountOption } from "@/lib/accounts";
 import { deleteProject } from "@/app/admin/(protected)/pedidos/actions";
 import {
   PROJECT_STATUS_LABELS,
@@ -35,17 +40,22 @@ export type ProjectRow = ProjectFormData & { client: { name: string } };
 interface ProjectsTableProps {
   projects: ProjectRow[];
   clients: Client[];
+  /** Opções dos pedidos listados, para emitir uma factura directamente a partir deles. */
+  projectOptions: ProjectOption[];
+  accounts: AccountOption[];
   q: string;
   estado: string;
+  range: { periodo?: string; de?: string; ate?: string };
   page: number;
   totalPages: number;
   total: number;
 }
 
-export function ProjectsTable({ projects, clients, q, estado, page, totalPages, total }: ProjectsTableProps) {
+export function ProjectsTable({ projects, clients, projectOptions, accounts, q, estado, range, page, totalPages, total }: ProjectsTableProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<ProjectRow | null>(null);
   const [busy, setBusy] = useState(false);
+  const [invoiceFor, setInvoiceFor] = useState<string | null>(null);
 
   const handleNew = () => {
     setEditingProject(null);
@@ -75,6 +85,7 @@ export function ProjectsTable({ projects, clients, q, estado, page, totalPages, 
   };
 
   const actionsFor = (project: ProjectRow): RowAction[] => [
+    { label: "Nova factura", icon: Receipt, tone: "primary", onClick: () => setInvoiceFor(project.id) },
     { label: "Editar", icon: Pencil, tone: "primary", onClick: () => handleEdit(project) },
     { label: "Eliminar", icon: Trash2, tone: "danger", disabled: busy, onClick: () => handleDelete(project) },
   ];
@@ -82,7 +93,7 @@ export function ProjectsTable({ projects, clients, q, estado, page, totalPages, 
   return (
     <div className="rounded-2xl border border-border bg-white shadow-soft">
       <div className="flex flex-col gap-3 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
-        <SearchForm q={q} basePath="/admin/pedidos" hidden={{ estado }} placeholder="Pesquisar por título ou cliente…" />
+        <SearchForm q={q} basePath="/admin/pedidos" hidden={{ estado, ...range }} placeholder="Pesquisar por título ou cliente…" />
         <Button variant="teal" onClick={handleNew} className="w-full sm:w-auto">
           <Plus className="h-4 w-4" />
           Novo pedido
@@ -187,13 +198,23 @@ export function ProjectsTable({ projects, clients, q, estado, page, totalPages, 
         </>
       )}
 
-      <Pagination basePath="/admin/pedidos" page={page} totalPages={totalPages} total={total} params={{ q, estado }} />
+      <Pagination basePath="/admin/pedidos" page={page} totalPages={totalPages} total={total} params={{ q, estado, ...range }} />
 
       <ProjectFormDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         project={editingProject}
         clients={clients}
+      />
+
+      {/* Emitir factura sem sair da lista: o pedido já vem seleccionado. */}
+      <InvoiceFormDialog
+        open={Boolean(invoiceFor)}
+        onOpenChange={(next) => !next && setInvoiceFor(null)}
+        projects={projectOptions}
+        clients={clients}
+        accounts={accounts}
+        defaultProjectId={invoiceFor ?? undefined}
       />
     </div>
   );

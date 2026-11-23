@@ -9,7 +9,7 @@ import { nextInvoiceNumber } from "@/lib/invoice-number"
 import { advanceProjectAfterPayment } from "@/lib/project-status-automation"
 import { broadcastNotificationsChanged } from "@/lib/realtime"
 import { parseDateOrNull } from "@/lib/serialize"
-import { invoiceSchema, type InvoiceValues } from "@/lib/validations/invoice"
+import { invoiceSchema, markPaidSchema, type InvoiceValues, type MarkPaidValues } from "@/lib/validations/invoice"
 
 export async function createInvoice(values: InvoiceValues) {
   await requireAdmin()
@@ -28,7 +28,8 @@ export async function createInvoice(values: InvoiceValues) {
         dueDate: parseDateOrNull(parsed.dueDate) ?? new Date(),
         paymentMethod: parsed.paymentMethod || null,
         notes: parsed.notes || null,
-        paidAt: parsed.status === "PAGA" ? new Date() : null,
+        paidAt: parsed.status === "PAGA" ? (parseDateOrNull(parsed.paidAt) ?? new Date()) : null,
+        accountId: parsed.status === "PAGA" ? parsed.accountId || null : null,
         settlesProject: parsed.settlesProject,
       },
     })
@@ -72,8 +73,13 @@ export async function updateInvoice(id: string, values: InvoiceValues) {
       paymentMethod: parsed.paymentMethod || null,
       notes: parsed.notes || null,
       settlesProject: parsed.settlesProject,
-      ...(justPaid ? { paidAt: new Date() } : {}),
-      ...(unpaid ? { paidAt: null } : {}),
+      ...(parsed.status === "PAGA"
+        ? {
+            paidAt: parseDateOrNull(parsed.paidAt) ?? (justPaid ? new Date() : undefined),
+            accountId: parsed.accountId || null,
+          }
+        : {}),
+      ...(unpaid ? { paidAt: null, accountId: null } : {}),
     },
     })
 
@@ -104,6 +110,44 @@ export async function deleteInvoice(id: string) {
     const invoice = await tx.invoice.delete({ where: { id }, select: { projectId: true } })
     await recomputeProjectInvoices(tx, invoice.projectId)
   })
+  revalidatePath("/admin/faturas")
+  revalidatePath("/admin/financeiro")
+  revalidatePath("/admin")
+  revalidatePath("/admin/clientes/[id]", "page")
+  revalidatePath("/admin/pedidos/[id]", "page")
+  broadcastNotificationsChanged()
+}
+
+
+/**
+ * Marca uma factura como paga, indicando em que conta o dinheiro entrou.
+ * É o que o pop-up "Onde recebeu?" chama — sem abrir o formulário completo.
+ */
+export async function markInvoicePaid(id: string, values: MarkPaidValues) {
+  await requireAdmin()
+  const parsed = markPaidSchema.parse(values)
+
+  if (parsed.accountId) {
+    const account = await prisma.account.findUnique({ where: { id: parsed.accountId }, select: { id: true } })
+    if (!account) throw new Error("Conta inválida.")
+  }
+
+  await prisma.$transaction(async (tx) => {
+    const invoice = await tx.invoice.update({
+      where: { id },
+      data: {
+        status: "PAGA",
+        paidAt: parseDateOrNull(parsed.paidAt) ?? new Date(),
+        accountId: parsed.accountId || null,
+      },
+      select: { projectId: true },
+    })
+
+    await recomputeProjectInvoices(tx, invoice.projectId)
+    await advanceProjectAfterPayment(tx, invoice.projectId)
+  })
+
+  revalidatePath("/admin/pedidos")
   revalidatePath("/admin/faturas")
   revalidatePath("/admin/financeiro")
   revalidatePath("/admin")

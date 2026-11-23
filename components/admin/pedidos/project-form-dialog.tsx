@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarClock, Loader2, Plus, Repeat, Trash2 } from "lucide-react";
+import { useState } from "react";
 import type { Client } from "@prisma/client";
 
 import {
@@ -35,6 +36,7 @@ import {
   hasServiceDetails,
   type ServiceDetails,
 } from "@/lib/service-details";
+import { ClientFormDialog } from "@/components/admin/clientes/client-form-dialog";
 import { cn } from "@/lib/utils";
 import { createProject, updateProject } from "@/app/admin/(protected)/pedidos/actions";
 
@@ -62,6 +64,16 @@ interface ProjectFormDialogProps {
   onOpenChange: (open: boolean) => void;
   project?: ProjectFormData | null;
   clients: Client[];
+  /** Chamado depois de criar um pedido novo (ex.: para o seleccionar numa factura). */
+  onCreated?: (project: {
+    id: string;
+    title: string;
+    value: number;
+    status: string;
+    billingType: ProjectValues["billingType"];
+    clientId: string;
+    clientName: string;
+  }) => void;
 }
 
 const EMPTY_VALUES: ProjectValues = {
@@ -123,8 +135,13 @@ function FieldError({ message }: { message?: string }) {
   return message ? <p className="text-xs font-medium text-destructive">{message}</p> : null;
 }
 
-export function ProjectFormDialog({ open, onOpenChange, project, clients }: ProjectFormDialogProps) {
+export function ProjectFormDialog({ open, onOpenChange, project, clients: clientsProp, onCreated }: ProjectFormDialogProps) {
   const isEditing = Boolean(project);
+
+  // Clientes criados aqui mesmo ficam logo disponíveis e seleccionados.
+  const [localClients, setLocalClients] = useState<Client[]>([]);
+  const [clientDialogOpen, setClientDialogOpen] = useState(false);
+  const clients = [...clientsProp, ...localClients.filter((lc) => !clientsProp.some((c) => c.id === lc.id))];
 
   const {
     register,
@@ -202,7 +219,11 @@ export function ProjectFormDialog({ open, onOpenChange, project, clients }: Proj
     if (isEditing && project) {
       await updateProject(project.id, values);
     } else {
-      await createProject(values);
+      const created = await createProject(values);
+      onCreated?.({
+        ...created,
+        clientName: clients.find((c) => c.id === created.clientId)?.name ?? "",
+      });
     }
     onOpenChange(false);
   };
@@ -212,6 +233,7 @@ export function ProjectFormDialog({ open, onOpenChange, project, clients }: Proj
   const applicantsError = (detailErrors?.applicants as { message?: string } | undefined)?.message;
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
@@ -232,7 +254,17 @@ export function ProjectFormDialog({ open, onOpenChange, project, clients }: Proj
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="clientId">Cliente</Label>
+              <div className="flex items-center justify-between gap-3">
+                <Label htmlFor="clientId">Cliente</Label>
+                <button
+                  type="button"
+                  onClick={() => setClientDialogOpen(true)}
+                  className="inline-flex items-center gap-1 rounded-md text-xs font-semibold text-primary-700 hover:text-primary-800 hover:underline"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Novo cliente
+                </button>
+              </div>
               <Select id="clientId" {...register("clientId")}>
                 <option value="">Selecione…</option>
                 {clients.map((client) => (
@@ -484,5 +516,16 @@ export function ProjectFormDialog({ open, onOpenChange, project, clients }: Proj
         </form>
       </DialogContent>
     </Dialog>
+
+    {/* Irmão do pop-up (não filho do <form>) para o submit do cliente não "subir" para o pedido. */}
+    <ClientFormDialog
+      open={clientDialogOpen}
+      onOpenChange={setClientDialogOpen}
+      onCreated={(client) => {
+        setLocalClients((current) => [...current, client]);
+        setValue("clientId", client.id, { shouldValidate: true });
+      }}
+    />
+    </>
   );
 }

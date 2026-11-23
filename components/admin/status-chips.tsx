@@ -15,11 +15,13 @@ export function StatusChips({
   chips,
   current,
   params = {},
+  className = "mb-5",
 }: {
   basePath: string;
   chips: StatusChip[];
   current: string;
   params?: Record<string, string | undefined>;
+  className?: string;
 }) {
   const hrefFor = (value: string) => {
     const search = new URLSearchParams();
@@ -32,7 +34,7 @@ export function StatusChips({
   };
 
   return (
-    <div className="mb-5 flex gap-2 overflow-x-auto pb-1 scrollbar-none" role="group" aria-label="Filtrar por estado">
+    <div className={cn("flex gap-2 overflow-x-auto pb-1 scrollbar-none", className)} role="group" aria-label="Filtrar por estado">
       {chips.map((chip) => {
         const active = current === chip.value;
         return (

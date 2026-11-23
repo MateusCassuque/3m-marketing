@@ -49,6 +49,23 @@ Financeiro · Utilizadores (só administradores).
 
 Perfis: **ADMIN** (tudo) e **EDITOR** (só consulta).
 
+## Registo rápido, filtros por período, contas e despesas
+
+- **Sem sair da página:** no formulário de factura há "+ Novo pedido"; no de pedido há "+ Novo cliente"; no de despesa e no
+  pop-up de pagamento há "+ Nova conta". O que acabou de criar fica logo seleccionado. Na lista de pedidos e na página do
+  pedido há **"Nova factura"**, com o pedido já escolhido.
+- **Cliente:** só o nome e o telefone são obrigatórios (e-mail, NIF, empresa e morada são opcionais).
+- **Filtro de período** (`lib/date-range.ts` + `components/admin/date-range-filter.tsx`): hoje, esta semana, este mês, últimos
+  7/30/90 dias e 12 meses, este ano, todo o período ou um intervalo no calendário. Está no dashboard, nas facturas (data de
+  emissão), nos pedidos (data de criação, além do estado) e nas finanças, e vive no URL (`?periodo=…&de=…&ate=…`).
+- **Contas** (`/admin/financeiro/contas`): descrição, banco/tipo, número, saldo inicial. Saldo actual = inicial + recebido −
+  gasto. Ao marcar uma factura como paga (no formulário ou no botão "Marcar paga" da lista) abre o pop-up **"Onde recebeu o
+  pagamento?"** — escolhe a conta e a data de recebimento.
+- **Despesas** (`/admin/financeiro/despesas`): categoria, fornecedor, conta de onde saiu, pedido (opcional); filtros por
+  período, categoria e pesquisa; paginação.
+- **Resumo** (`/admin/financeiro`): facturado, recebido, despesas, **lucro (recebido − despesas)**, por receber, saldo
+  nas contas, "onde está o dinheiro" por conta, entradas vs. saídas (6 meses) e despesas por categoria.
+
 ## Serviços de assessoria e cobrança recorrente
 
 - **Novos serviços de pedido:** assessoria de visto, bilhetes de passagem e assessoria de passaporte.

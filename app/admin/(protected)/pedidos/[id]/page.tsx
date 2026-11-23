@@ -23,7 +23,8 @@ import { formatCurrency, formatDateNotTime } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/admin/page-header";
 import { BackLink, DefinitionRow, Section, Stat } from "@/components/admin/detalhe/bits";
-import { EditProjectButton } from "@/components/admin/detalhe/detail-actions";
+import { EditProjectButton, NewInvoiceButton } from "@/components/admin/detalhe/detail-actions";
+import { getAccountOptions } from "@/lib/accounts";
 import { InvoiceList } from "@/components/admin/detalhe/invoice-list";
 
 export const metadata: Metadata = {
@@ -36,7 +37,7 @@ export const dynamic = "force-dynamic";
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const [project, clients] = await Promise.all([
+  const [project, clients, accounts] = await Promise.all([
     prisma.project.findUnique({
       where: { id },
       include: {
@@ -55,6 +56,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       },
     }),
     prisma.client.findMany({ orderBy: { name: "asc" } }),
+    getAccountOptions(),
   ]);
   if (!project) notFound();
 
@@ -74,6 +76,21 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       <PageHeader title={project.title} description={`${SERVICE_LABELS[project.service]} · criado a ${formatDateNotTime(project.createdAt)}`}>
         <Badge variant={PROJECT_STATUS_BADGE[project.status]}>{PROJECT_STATUS_LABELS[project.status]}</Badge>
         <Badge variant={PRIORITY_BADGE[project.priority]}>Prioridade {PRIORITY_LABELS[project.priority].toLowerCase()}</Badge>
+        <NewInvoiceButton
+          clients={clients}
+          accounts={accounts}
+          project={{
+            id: project.id,
+            title: project.title,
+            value,
+            client: { name: project.client.name },
+            recurring: project.billingType === "RECORRENTE",
+            status: project.status,
+            invoices: project.invoices
+              .filter((inv) => inv.status !== "CANCELADA")
+              .map((inv) => ({ id: inv.id, amount: Number(inv.amount), createdAt: inv.createdAt.toISOString() })),
+          }}
+        />
         <EditProjectButton
           clients={clients}
           project={{

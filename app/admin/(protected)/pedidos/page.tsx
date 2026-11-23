@@ -4,6 +4,10 @@ import type { Prisma, ProjectStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { firstParam, hasKey, paginate, parsePage } from "@/lib/pagination";
 import { PageHeader } from "@/components/admin/page-header";
+import { DateRangeFilter } from "@/components/admin/date-range-filter";
+import { resolveRange, rangeWhere } from "@/lib/date-range";
+import { getAccountOptions } from "@/lib/accounts";
+import { PROJECT_OPTION_INCLUDE, toProjectOption } from "@/lib/project-options";
 import { StatusChips } from "@/components/admin/status-chips";
 import { PROJECT_STATUS_LABELS } from "@/lib/project-labels";
 import { parseServiceDetails } from "@/lib/service-details";
@@ -27,7 +31,13 @@ export default async function PedidosPage({
   const rawEstado = firstParam(params.estado);
   const estado = hasKey(PROJECT_STATUS_LABELS, rawEstado) ? (rawEstado as ProjectStatus) : "";
 
+  // Período (data de criação do pedido).
+  const range = resolveRange(params, "tudo");
+  const createdFilter = rangeWhere(range);
+  const dateWhere: Prisma.ProjectWhereInput = createdFilter ? { createdAt: createdFilter } : {};
+
   const where: Prisma.ProjectWhereInput = {
+    ...dateWhere,
     ...(estado ? { status: estado } : {}),
     ...(q
       ? {
@@ -42,16 +52,17 @@ export default async function PedidosPage({
   const total = await prisma.project.count({ where });
   const { page, totalPages, skip, take } = paginate(total, parsePage(params.page));
 
-  const [projects, clients, grouped] = await Promise.all([
+  const [projects, clients, grouped, accounts] = await Promise.all([
     prisma.project.findMany({
       where,
-      include: { client: { select: { name: true } } },
+      include: PROJECT_OPTION_INCLUDE,
       orderBy: { createdAt: "desc" },
       skip,
       take,
     }),
     prisma.client.findMany({ orderBy: { name: "asc" } }),
-    prisma.project.groupBy({ by: ["status"], _count: { _all: true } }),
+    prisma.project.groupBy({ by: ["status"], where: dateWhere, _count: { _all: true } }),
+    getAccountOptions(),
   ]);
 
   const counts = new Map<string, number>(grouped.map((g) => [g.status, g._count._all]));
@@ -84,11 +95,33 @@ export default async function PedidosPage({
     client: { name: project.client.name },
   }));
 
+  const projectOptions = projects.map(toProjectOption);
+
   return (
     <div className="p-5 sm:p-6 lg:p-10">
       <PageHeader title="Pedidos" description="Acompanhe os projectos em curso e o valor de cada pedido." />
-      <StatusChips basePath="/admin/pedidos" chips={chips} current={estado} params={{ q }} />
-      <ProjectsTable projects={rows} clients={clients} q={q} estado={estado} page={page} totalPages={totalPages} total={total} />
+      <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <StatusChips
+          basePath="/admin/pedidos"
+          chips={chips}
+          current={estado}
+          params={{ q, ...range.params }}
+          className="mb-0 min-w-0"
+        />
+        <DateRangeFilter current={range} className="shrink-0 self-start lg:self-auto" />
+      </div>
+      <ProjectsTable
+        projects={rows}
+        clients={clients}
+        projectOptions={projectOptions}
+        accounts={accounts}
+        q={q}
+        estado={estado}
+        range={range.params}
+        page={page}
+        totalPages={totalPages}
+        total={total}
+      />
     </div>
   );
 }

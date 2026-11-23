@@ -21,6 +21,8 @@ export function toInvoiceRow(invoice: InvoiceWithRelations): InvoiceRow {
     paymentMethod: invoice.paymentMethod,
     notes: invoice.notes,
     settlesProject: invoice.settlesProject,
+    accountId: invoice.accountId,
+    paidAt: invoice.paidAt,
     createdAt: invoice.createdAt,
     installment: invoice.installment,
     recurringCycle: invoice.recurringCycle,

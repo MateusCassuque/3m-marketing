@@ -102,12 +102,14 @@ export function ClientsTable({ clients, q, page, totalPages, total }: ClientsTab
                   </span>
                 </div>
                 <div className="mt-3 space-y-1.5 text-sm text-muted-foreground">
-                  <p className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 shrink-0" />
-                    <a href={`mailto:${client.email}`} className="truncate hover:text-primary-700">
-                      {client.email}
-                    </a>
-                  </p>
+                  {client.email && (
+                    <p className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 shrink-0" />
+                      <a href={`mailto:${client.email}`} className="truncate hover:text-primary-700">
+                        {client.email}
+                      </a>
+                    </p>
+                  )}
                   {client.phone && (
                     <p className="flex items-center gap-2">
                       <Phone className="h-4 w-4 shrink-0" />
@@ -153,8 +155,8 @@ export function ClientsTable({ clients, q, page, totalPages, total }: ClientsTab
                       )}
                     </td>
                     <td className="px-5 py-3.5 text-muted-foreground">
-                      <div>{client.email}</div>
-                      {client.phone && <div className="text-xs">{client.phone}</div>}
+                      {client.phone && <div>{client.phone}</div>}
+                      {client.email && <div className="text-xs">{client.email}</div>}
                     </td>
                     <td className="px-5 py-3.5 text-navy-600">{client._count.projects}</td>
                     <td className={STICKY_TD}>
