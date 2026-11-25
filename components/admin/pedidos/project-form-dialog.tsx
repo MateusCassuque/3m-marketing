@@ -37,7 +37,7 @@ import {
   type ServiceDetails,
 } from "@/lib/service-details";
 import { ClientFormDialog } from "@/components/admin/clientes/client-form-dialog";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { createProject, updateProject } from "@/app/admin/(protected)/pedidos/actions";
 
 export interface ProjectFormData {
@@ -166,6 +166,10 @@ export function ProjectFormDialog({ open, onOpenChange, project, clients: client
   const clientName = clients.find((c) => c.id === clientId)?.name ?? "";
   const detailService = hasServiceDetails(service) ? service : null;
   const recurring = billingType === "RECORRENTE";
+  // Pedido para outras pessoas: o valor é por pessoa e o total = valor × nº de pessoas.
+  const watchedApplicants = watch("serviceDetails.applicants") ?? [];
+  const headcount = Math.max(watchedApplicants.filter((a) => a?.name?.trim()).length, 1);
+  const perPerson = Boolean(detailService) && !forClient && !recurring;
 
   useEffect(() => {
     if (open) {
@@ -178,7 +182,8 @@ export function ProjectFormDialog({ open, onOpenChange, project, clients: client
               service: project.service,
               status: project.status,
               priority: project.priority,
-              value: project.value,
+              // Pedido para várias pessoas: mostra o preço de cada uma (o total é calculado ao guardar).
+              value: project.serviceDetails?.unitValue ?? project.value,
               startDate: toDateInputValue(project.startDate),
               dueDate: toDateInputValue(project.dueDate),
               billingType: project.billingType,
@@ -433,8 +438,20 @@ export function ProjectFormDialog({ open, onOpenChange, project, clients: client
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="value">{recurring ? "Valor de cada cobrança (Kz)" : "Valor (Kz)"}</Label>
+              <Label htmlFor="value">
+                {recurring
+                  ? "Valor de cada cobrança (Kz)"
+                  : perPerson
+                    ? `Valor por ${noun.one} (Kz)`
+                    : "Valor (Kz)"}
+              </Label>
               <Input id="value" type="number" step="0.01" min="0" {...register("value")} />
+              {perPerson && (
+                <p className="text-xs text-muted-foreground">
+                  {headcount} {headcount === 1 ? noun.one : noun.many} × {formatCurrency(Number(watch("value")) || 0)} ={" "}
+                  <strong className="text-navy-700">{formatCurrency((Number(watch("value")) || 0) * headcount)}</strong>
+                </p>
+              )}
               <FieldError message={errors.value?.message} />
             </div>
           </div>

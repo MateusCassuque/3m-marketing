@@ -21,6 +21,7 @@ import {
   STICKY_TH,
   type RowAction,
 } from "@/components/admin/row-actions"
+import type { ServiceDetails } from "@/lib/service-details"
 import { PaymentAccountDialog } from "@/components/admin/faturas/payment-account-dialog"
 import type { AccountOption } from "@/lib/accounts"
 import { deleteInvoice, markInvoicePaid } from "@/app/admin/(protected)/faturas/actions"
@@ -37,7 +38,11 @@ export type InvoiceRow = InvoiceFormData & {
   previouslyInvoiced: number | null
   remaining: number | null
   project: {
-    title: string, client: {
+    title: string,
+    /** Serviço do pedido e detalhes (requerentes de visto/passaporte, passageiros). */
+    service: string,
+    details: ServiceDetails | null,
+    client: {
       name: string,
       adress: string
       company: string

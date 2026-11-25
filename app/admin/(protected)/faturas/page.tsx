@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
-import { toInvoiceRow } from "@/lib/invoice-rows";
+import { INVOICE_PROJECT_SELECT, toInvoiceRow } from "@/lib/invoice-rows";
 import { runRecurringBilling } from "@/lib/recurring-billing";
 import { firstParam, hasKey, paginate, parsePage } from "@/lib/pagination";
 import { PageHeader } from "@/components/admin/page-header";
@@ -83,12 +83,7 @@ export default async function FaturasPage({
     prisma.invoice.findMany({
       where,
       include: {
-        project: {
-          select: {
-            title: true,
-            client: { select: { name: true, address: true, company: true, phone: true } },
-          },
-        },
+        project: { select: INVOICE_PROJECT_SELECT },
       },
       orderBy: { issueDate: "desc" },
       skip,
@@ -113,7 +108,7 @@ export default async function FaturasPage({
           params={{ q, ...range.params }}
           className="mb-0 min-w-0"
         />
-        <DateRangeFilter current={range} className="shrink-0 self-auto lg:self-auto" />
+        <DateRangeFilter current={range} className="shrink-0 self-start lg:self-auto" />
       </div>
       <InvoicesTable
         invoices={invoiceRows}

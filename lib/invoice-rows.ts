@@ -1,9 +1,18 @@
 import type { Client, Invoice, Project } from "@prisma/client";
 
 import type { InvoiceRow } from "@/components/admin/faturas/invoices-table";
+import { parseServiceDetails } from "@/lib/service-details";
+
+/** O que é preciso carregar do pedido de cada factura (nome, serviço, requerentes e dados do cliente). */
+export const INVOICE_PROJECT_SELECT = {
+  title: true,
+  service: true,
+  serviceDetails: true,
+  client: { select: { name: true, address: true, company: true, phone: true } },
+} as const;
 
 type InvoiceWithRelations = Invoice & {
-  project: Pick<Project, "title"> & {
+  project: Pick<Project, "title" | "service" | "serviceDetails"> & {
     client: Pick<Client, "name" | "address" | "company" | "phone">;
   };
 };
@@ -31,6 +40,8 @@ export function toInvoiceRow(invoice: InvoiceWithRelations): InvoiceRow {
     remaining: invoice.remaining === null ? null : Number(invoice.remaining),
     project: {
       title: invoice.project.title,
+      service: invoice.project.service,
+      details: parseServiceDetails(invoice.project.serviceDetails),
       client: {
         name: invoice.project.client.name,
         telefone: invoice.project.client.phone || "",

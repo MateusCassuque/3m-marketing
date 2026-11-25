@@ -1,5 +1,6 @@
 "use client";
 
+import { buildInvoiceLine } from "@/lib/invoice-lines"
 import { Download } from "lucide-react";
 
 import {
@@ -56,8 +57,29 @@ export function InvoiceViewDialog({
                         <span className="text-muted-foreground">Cliente</span>
                         <span className="text-right font-medium text-navy-700">{invoice.project.client.name}</span>
 
-                        <span className="text-muted-foreground">Pedido</span>
-                        <span className="text-right font-medium text-navy-700">{invoice.project.title}</span>
+                        {(() => {
+                            const line = buildInvoiceLine(invoice.project)
+                            return line.names.length > 0 ? (
+                                <>
+                                    <span className="text-muted-foreground">
+                                        {invoice.project.service === "BILHETES" ? "Passageiros" : "Requerentes"} ({line.quantity})
+                                    </span>
+                                    <span className="text-right font-medium text-navy-700">
+                                        {line.names.map((name) => (
+                                            <span key={name} className="block">{name}</span>
+                                        ))}
+                                        {line.subtitle && (
+                                            <span className="mt-0.5 block text-xs font-normal text-muted-foreground">{line.subtitle}</span>
+                                        )}
+                                    </span>
+                                </>
+                            ) : (
+                                <>
+                                    <span className="text-muted-foreground">Pedido</span>
+                                    <span className="text-right font-medium text-navy-700">{invoice.project.title}</span>
+                                </>
+                            )
+                        })()}
 
                         <span className="text-muted-foreground">Valor desta factura</span>
                         <span className="text-right font-semibold text-navy-700">{formatCurrency(invoice.amount)}</span>

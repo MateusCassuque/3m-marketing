@@ -39,10 +39,23 @@ async function buildProjectData(parsed: ProjectValues) {
       destination: parsed.service === "BILHETES" ? d.destination : "",
       departDate: parsed.service === "BILHETES" ? d.departDate : "",
       returnDate: parsed.service === "BILHETES" ? d.returnDate : "",
+      // Preço de cada pessoa; o valor do pedido guardado é este × nº de pessoas.
+      unitValue: parsed.value,
     };
   }
 
   const recurring = parsed.billingType === "RECORRENTE";
+
+  // Pedido para outras pessoas (visto, passaporte, bilhetes): o valor introduzido é o preço de CADA
+  // pessoa e o valor do pedido é esse preço × o número de pessoas (ex.: 500.000 × 2 = 1.000.000).
+  let totalValue = parsed.value;
+  if (hasServiceDetails(parsed.service) && !parsed.serviceDetails.forClient && !recurring) {
+    const people = Math.max(
+      parsed.serviceDetails.applicants.filter((p) => p.name.trim()).length,
+      1,
+    );
+    totalValue = Math.round(parsed.value * people * 100) / 100;
+  }
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -53,7 +66,7 @@ async function buildProjectData(parsed: ProjectValues) {
     service: parsed.service,
     status: parsed.status,
     priority: parsed.priority,
-    value: parsed.value,
+    value: totalValue,
     startDate: parseDateOrNull(parsed.startDate),
     dueDate: parseDateOrNull(parsed.dueDate),
     serviceDetails: details,

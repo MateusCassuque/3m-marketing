@@ -66,6 +66,15 @@ Perfis: **ADMIN** (tudo) e **EDITOR** (só consulta).
 - **Resumo** (`/admin/financeiro`): facturado, recebido, despesas, **lucro (recebido − despesas)**, por receber, saldo
   nas contas, "onde está o dinheiro" por conta, entradas vs. saídas (6 meses) e despesas por categoria.
 
+## Requerentes na factura (visto, passaporte, bilhetes)
+
+Quando o pedido **não é para o próprio cliente**, a factura mostra, em vez do nome do pedido, o **nome de cada
+requerente/passageiro** (com uma linha de descrição, ex.: "Assessoria de visto · Turismo · Portugal") e a **quantidade é o
+número de pessoas** (`lib/invoice-lines.ts`, usado no PDF e no detalhe da factura). Se o pedido é para o cliente, a factura
+fica como antes (nome do pedido, quantidade 1). No pedido, o valor introduzido passa a ser o **preço de cada pessoa**, e o
+valor do pedido guardado é esse preço × o nº de pessoas (ex.: 500.000 × 2 = 1.000.000). Ao editar o pedido, o formulário
+mostra o preço por pessoa e o cálculo.
+
 ## Serviços de assessoria e cobrança recorrente
 
 - **Novos serviços de pedido:** assessoria de visto, bilhetes de passagem e assessoria de passaporte.

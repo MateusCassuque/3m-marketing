@@ -44,6 +44,8 @@ export const serviceDetailsSchema = z.object({
   destination: z.string().trim().max(80),
   departDate: z.string(),
   returnDate: z.string(),
+  /** Preço de cada requerente/passageiro (o valor do pedido = preço × nº de pessoas). */
+  unitValue: z.number().optional(),
 });
 
 export type ServiceDetails = z.infer<typeof serviceDetailsSchema>;

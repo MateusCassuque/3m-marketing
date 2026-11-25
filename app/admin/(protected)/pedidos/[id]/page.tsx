@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
-import { toInvoiceRow, summarizeInvoices } from "@/lib/invoice-rows";
+import { INVOICE_PROJECT_SELECT, toInvoiceRow, summarizeInvoices } from "@/lib/invoice-rows";
 import {
   PRIORITY_BADGE,
   PRIORITY_LABELS,
@@ -44,12 +44,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         client: true,
         invoices: {
           include: {
-            project: {
-              select: {
-                title: true,
-                client: { select: { name: true, address: true, company: true, phone: true } },
-              },
-            },
+            project: { select: INVOICE_PROJECT_SELECT },
           },
           orderBy: { issueDate: "desc" },
         },
@@ -114,7 +109,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         />
       </PageHeader>
 
-      <div className="grid sm:grid-cols-2 gap-4 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         <Stat label={recurring ? "Valor de cada cobrança" : "Valor do pedido"} value={formatCurrency(value)} />
         <Stat label="Facturado" value={formatCurrency(totals.invoiced)} />
         <Stat label="Recebido" value={formatCurrency(totals.received)} tone="success" />
@@ -137,6 +132,11 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
             <DefinitionRow label="Serviço">{SERVICE_LABELS[project.service]}</DefinitionRow>
             <DefinitionRow label="Início">{project.startDate ? formatDateNotTime(project.startDate) : "—"}</DefinitionRow>
             <DefinitionRow label="Entrega">{project.dueDate ? formatDateNotTime(project.dueDate) : "—"}</DefinitionRow>
+            {serviceDetails && !serviceDetails.forClient && serviceDetails.unitValue !== undefined && serviceDetails.applicants.length > 1 && (
+              <DefinitionRow label="Valor por pessoa">
+                {formatCurrency(serviceDetails.unitValue)} × {serviceDetails.applicants.length}
+              </DefinitionRow>
+            )}
             <DefinitionRow label="Cobrança">
               {recurring ? `Recorrente · ${recurrenceLabel.toLowerCase()}` : "Única"}
             </DefinitionRow>

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Building2, CalendarClock } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
-import { toInvoiceRow, summarizeInvoices } from "@/lib/invoice-rows";
+import { INVOICE_PROJECT_SELECT, toInvoiceRow, summarizeInvoices } from "@/lib/invoice-rows";
 import { PROJECT_STATUS_BADGE, PROJECT_STATUS_LABELS } from "@/lib/project-labels";
 import { SERVICE_LABELS } from "@/lib/lead-labels";
 import { formatCurrency, formatDateNotTime } from "@/lib/utils";
@@ -35,12 +35,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const invoices = await prisma.invoice.findMany({
     where: { project: { clientId: id } },
     include: {
-      project: {
-        select: {
-          title: true,
-          client: { select: { name: true, address: true, company: true, phone: true } },
-        },
-      },
+      project: { select: INVOICE_PROJECT_SELECT },
     },
     orderBy: { issueDate: "desc" },
   });
@@ -62,7 +57,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         <EditClientButton client={client} />
       </PageHeader>
 
-      <div className="grid sm:grid-cols-2 gap-4 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         <Stat label="Pedidos" value={client.projects.length} />
         <Stat label="Facturado" value={formatCurrency(totals.invoiced)} />
         <Stat label="Recebido" value={formatCurrency(totals.received)} tone="success" />

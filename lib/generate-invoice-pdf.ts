@@ -1,6 +1,7 @@
 import jsPDF from "jspdf"
 
 import { INVOICE_LOGO_BASE64, INVOICE_LOGO_RATIO } from "@/lib/invoice-logo"
+import { buildInvoiceLine } from "@/lib/invoice-lines"
 
 import type { InvoiceRow } from "@/components/admin/faturas/invoices-table"
 
@@ -102,23 +103,48 @@ export function generateInvoicePdf(invoice: InvoiceRow) {
     doc.setFont("helvetica", "bold")
     doc.setFontSize(9)
     doc.text("Produto", marginX + 3, tableY + 5.5)
-    doc.text("Status", marginX + 50, tableY + 5.5)
-    doc.text("Qtd", marginX + 92, tableY + 5.5)
+    doc.text("Status", marginX + 66, tableY + 5.5)
+    doc.text("Qtd", marginX + 94, tableY + 5.5)
     doc.text("Preço", marginX + 112, tableY + 5.5)
     doc.text("Total", rightX - 3, tableY + 5.5, { align: "right" })
 
+    // Linha do produto: o nome do pedido, ou — se o serviço é para outras pessoas —
+    // o nome de cada requerente, com a quantidade igual ao nº de pessoas.
+    const line = buildInvoiceLine(invoice.project)
+    const quantity = line.quantity
+    const unitPrice = invoice.amount / quantity
+
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(9.5)
+    const productWidth = 60
+    const mainLines: string[] =
+        line.names.length > 0
+            ? line.names.flatMap((name) => doc.splitTextToSize(name, productWidth) as string[])
+            : (doc.splitTextToSize(line.title, productWidth) as string[])
+    doc.setFontSize(8)
+    const subLines: string[] = line.subtitle ? (doc.splitTextToSize(line.subtitle, productWidth) as string[]) : []
+
+    const lineHeight = 4.6
     const rowY = tableY + 8
-    const rowHeight = 9
+    const rowHeight = Math.max(9, 4.5 + (mainLines.length + subLines.length) * lineHeight + 1.5)
     doc.setFillColor(245, 245, 245)
     doc.rect(marginX, rowY, tableWidth, rowHeight, "F")
 
     doc.setTextColor(30, 30, 30)
     doc.setFont("helvetica", "normal")
     doc.setFontSize(9.5)
-    doc.text(invoice.project.title, marginX + 3, rowY + 6)
-    doc.text(invoice.status, marginX + 50, rowY + 6)
-    doc.text("1", marginX + 92, rowY + 6)
-    doc.text(formatAOA(invoice.amount), marginX + 112, rowY + 6)
+    mainLines.forEach((text, i) => doc.text(text, marginX + 3, rowY + 6 + i * lineHeight))
+    if (subLines.length > 0) {
+        doc.setFontSize(8)
+        doc.setTextColor(110, 110, 110)
+        subLines.forEach((text, i) => doc.text(text, marginX + 3, rowY + 6 + (mainLines.length + i) * lineHeight))
+        doc.setTextColor(30, 30, 30)
+    }
+
+    doc.setFontSize(9.5)
+    doc.text(invoice.status, marginX + 66, rowY + 6)
+    doc.text(String(quantity), marginX + 94, rowY + 6)
+    doc.text(formatAOA(unitPrice), marginX + 112, rowY + 6)
     doc.text(formatAOA(invoice.amount), rightX - 3, rowY + 6, { align: "right" })
 
     // --- Totais ---
