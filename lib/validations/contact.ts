@@ -26,6 +26,9 @@ export const contactFormSchema = z.object({
       "midias-sociais",
       "identidade-visual",
       "registo-empresa",
+      "assessoria-visto",
+      "bilhetes",
+      "assessoria-passaporte",
       "outro",
     ],
     { errorMap: () => ({ message: "Selecione um serviço." }) },
@@ -46,5 +49,8 @@ export const serviceOptions: { value: ContactFormValues["service"]; label: strin
   { value: "midias-sociais", label: "Gestão de redes sociais (3M)" },
   { value: "identidade-visual", label: "Identidade visual" },
   { value: "registo-empresa", label: "Criação e registo de empresa" },
+  { value: "assessoria-visto", label: "Assessoria de pedido de visto" },
+  { value: "bilhetes", label: "Bilhetes de passagem" },
+  { value: "assessoria-passaporte", label: "Assessoria na emissão do passaporte" },
   { value: "outro", label: "Outro / ainda não sei" },
 ];

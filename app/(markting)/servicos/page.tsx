@@ -6,6 +6,7 @@ import { PricingPlans, PlanCard } from "@/components/sections/pricing-plans";
 import { SocialPackages } from "@/components/sections/social-packages";
 import { ProcessSteps } from "@/components/sections/process-steps";
 import { CtaSection } from "@/components/sections/cta-section";
+import { AssessoriaSection } from "@/components/sections/assessoria-section";
 import { EXTRA_SERVICES, PAYMENT_OPTIONS } from "@/lib/site-data";
 
 export const metadata: Metadata = {
@@ -70,6 +71,8 @@ export default function ServicosPage() {
           </div>
         </div>
       </section>
+
+      <AssessoriaSection />
 
       <section id="pagamento" className="scroll-mt-24 bg-white py-20 lg:py-24">
         <div className="container-padded">

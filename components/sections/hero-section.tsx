@@ -25,10 +25,11 @@ export function HeroSection() {
   const names = PROJECTS.map((p) => p.name);
 
   return (
-    <section id="inicio" className="relative isolate overflow-hidden bg-hero-night text-white">
-      <div className="bg-grid-lines pointer-events-none absolute inset-0 -z-10" aria-hidden="true" />
+    <section id="inicio" className="relative isolate overflow-hidden bg-hero-sky text-white">
+      {/* Céu estrelado + "K" 3D ocupam o hero inteiro, atrás do texto. */}
+      <HeroK className="absolute inset-0 -z-10" />
 
-      <div className="container-padded grid min-h-[calc(100svh-72px)] grid-cols-1 items-center gap-6 pb-24 pt-10 lg:grid-cols-[1.05fr_1fr] lg:gap-4 lg:pb-28 lg:pt-6">
+      <div className="container-padded grid min-h-[calc(100svh-72px)] grid-cols-1 items-center gap-2 pb-24 pt-12 lg:grid-cols-[1.05fr_1fr] lg:gap-4 lg:pb-28 lg:pt-6">
         <motion.div initial="hidden" animate="show" className="relative z-10 max-w-xl">
           <motion.p
             variants={fadeUp}
@@ -84,18 +85,8 @@ export function HeroSection() {
           </motion.ul>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, scale: 0.94 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut", delay: 0.15 }}
-          className="relative mx-auto aspect-[5/4] w-full max-w-xl lg:max-w-none lg:aspect-auto lg:h-[640px]"
-        >
-          <div
-            className="pointer-events-none absolute left-1/2 top-1/2 h-[70%] w-[70%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary-500/25 blur-[90px]"
-            aria-hidden="true"
-          />
-          <HeroK className="absolute inset-0" />
-        </motion.div>
+        {/* Espaço para o "K" 3D por baixo do texto, no telemóvel. */}
+        <div className="h-[340px] lg:hidden" aria-hidden="true" />
       </div>
 
       {/* Faixa de projectos recentes */}

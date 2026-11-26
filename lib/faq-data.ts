@@ -88,6 +88,10 @@ export const FAQ_GROUPS: FaqGroup[] = [
         a: `Por ${extra("identidade")} Kz recebe logótipo original, paleta de cores, tipografia oficial, cartão de visita digital, manual de marca simplificado e ficheiros em alta resolução (PNG, PDF e vectorial).`,
       },
       {
+        q: "Fazem assessoria de visto, bilhetes de passagem e passaporte?",
+        a: "Sim. Acompanhamos pedidos de visto (já tratámos processos para Portugal, França, Espanha, Alemanha e Brasil), intermediamos a compra de bilhetes de passagem e damos assessoria na emissão do passaporte. O valor depende de cada caso: peça um orçamento pelo formulário de contacto ou pelo WhatsApp.",
+      },
+      {
         q: "Podem ajudar-me a registar a minha empresa em Angola?",
         a: `Sim. O serviço de criação e registo de empresas custa ${extra("empresa")} Kz e inclui verificação e reserva do nome, pacto social ou estatutos, registo no Guiché Único da Empresa, NIF empresarial, alvará comercial e acompanhamento na abertura de conta bancária.`,
       },

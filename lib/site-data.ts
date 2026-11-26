@@ -27,16 +27,23 @@ export type ServiceKey =
   | "landing"
   | "social"
   | "identidade"
-  | "empresa";
+  | "empresa"
+  | "visto"
+  | "bilhetes"
+  | "passaporte";
+
+export type ServiceGroup = "digital" | "assessoria";
 
 export const SERVICES: {
   key: ServiceKey;
+  group: ServiceGroup;
   title: string;
   description: string;
   from?: string;
 }[] = [
   {
     key: "website",
+    group: "digital",
     title: "Websites institucionais",
     description:
       "Páginas rápidas, seguras e feitas para o mercado angolano: Home, Sobre, Serviços, Portfólio e Contactos.",
@@ -44,6 +51,7 @@ export const SERVICES: {
   },
   {
     key: "webapp",
+    group: "digital",
     title: "Aplicações web e painel admin",
     description:
       "Sistemas à medida com painel de gestão e facturação certificada, para empresas de média e grande dimensão.",
@@ -51,6 +59,7 @@ export const SERVICES: {
   },
   {
     key: "landing",
+    group: "digital",
     title: "Landing pages",
     description:
       "Uma página focada numa única acção: vender um produto, divulgar um serviço ou captar clientes.",
@@ -58,6 +67,7 @@ export const SERVICES: {
   },
   {
     key: "social",
+    group: "digital",
     title: "Gestão de redes sociais",
     description:
       "A 3M cria, publica e anuncia por si: posts diários, vídeo profissional e campanhas pagas.",
@@ -65,6 +75,7 @@ export const SERVICES: {
   },
   {
     key: "identidade",
+    group: "digital",
     title: "Identidade visual",
     description:
       "Logótipo original, paleta, tipografia, cartão de visita digital e manual de marca simplificado.",
@@ -72,10 +83,33 @@ export const SERVICES: {
   },
   {
     key: "empresa",
+    group: "digital",
     title: "Criação e registo de empresas",
     description:
       "Reserva do nome, pacto social, Guiché Único, NIF empresarial, alvará e apoio na abertura de conta.",
     from: "150.000 Kz",
+  },
+  {
+    key: "visto",
+    group: "assessoria",
+    title: "Assessoria de pedidos de visto",
+    description:
+      "Acompanhamos o seu pedido de visto do princípio ao fim. Já tratámos processos para Portugal, França, Espanha, Alemanha e Brasil.",
+    from: "Sob consulta",
+  },
+  {
+    key: "bilhetes",
+    group: "assessoria",
+    title: "Bilhetes de passagem",
+    description: "Intermediamos a compra dos seus bilhetes de passagem, para viajar sem complicações.",
+    from: "Sob consulta",
+  },
+  {
+    key: "passaporte",
+    group: "assessoria",
+    title: "Assessoria na emissão do passaporte",
+    description: "Apoio em todo o processo de emissão do seu passaporte, para o ter pronto a tempo da viagem.",
+    from: "Sob consulta",
   },
 ];
 

@@ -49,6 +49,16 @@ Financeiro · Utilizadores (só administradores).
 
 Perfis: **ADMIN** (tudo) e **EDITOR** (só consulta).
 
+## Página inicial
+
+- **Hero:** céu estrelado em 3D (milhares de estrelas que cintilam, estrelas cadentes, paralaxe com o rato e o scroll) com o "K"
+  da Kodeza por cima, à direita no computador e por baixo do texto no telemóvel. A tela é transparente e ocupa o hero inteiro,
+  por isso já não há fundo quadrado (o "quadrado" vinha de um brilho com desfocagem dentro de um elemento animado).
+  Sem WebGL/enquanto carrega: céu em CSS (`components/starfield.tsx`) + logótipo. Respeita `prefers-reduced-motion`.
+- Páginas interiores e chamadas para acção com o mesmo céu. Cartões de serviços com foco de luz que segue o cursor.
+- Serviços de assessoria (visto, bilhetes, passaporte) no site, com preço "sob consulta", no formulário de contacto e no FAQ.
+- **Área admin** no menu do topo (computador) e no menu hambúrguer (telemóvel), além do rodapé.
+
 ## Registo rápido, filtros por período, contas e despesas
 
 - **Sem sair da página:** no formulário de factura há "+ Novo pedido"; no de pedido há "+ Novo cliente"; no de despesa e no

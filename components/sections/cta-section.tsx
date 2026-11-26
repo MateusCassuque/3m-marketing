@@ -6,6 +6,7 @@ import { ArrowRight, MessageCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { CubesBackdrop } from "@/components/three/cubes-backdrop";
+import { Starfield } from "@/components/starfield";
 import { COMPANY } from "@/lib/site-data";
 import { useUIStore } from "@/store/use-ui-store";
 
@@ -13,9 +14,9 @@ export function CtaSection() {
   const openContact = useUIStore((state) => state.openContact);
 
   return (
-    <section className="relative isolate overflow-hidden bg-hero-night py-24 text-white lg:py-32">
+    <section className="relative isolate overflow-hidden bg-hero-sky py-24 text-white lg:py-32">
+      <Starfield density="dense" className="-z-10" />
       <CubesBackdrop className="absolute inset-0 -z-10" />
-      <div className="bg-grid-lines pointer-events-none absolute inset-0 -z-10 opacity-60" aria-hidden="true" />
 
       <div className="container-padded relative text-center">
         <motion.h2

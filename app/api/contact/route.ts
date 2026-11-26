@@ -9,6 +9,9 @@ const SERVICE_MAP = {
   "midias-sociais": "MIDIAS_SOCIAIS",
   "identidade-visual": "IDENTIDADE_VISUAL",
   "registo-empresa": "REGISTO_EMPRESA",
+  "assessoria-visto": "ASSESSORIA_VISTO",
+  bilhetes: "BILHETES",
+  "assessoria-passaporte": "ASSESSORIA_PASSAPORTE",
   outro: "OUTRO",
 } as const;
 

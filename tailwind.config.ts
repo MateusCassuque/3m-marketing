@@ -91,6 +91,9 @@ const config: Config = {
         "brand-arrow": "linear-gradient(90deg, #FF7F0A 0%, #FFB36B 100%)",
         "hero-night":
           "radial-gradient(1200px 600px at 78% 8%, rgba(0,152,220,0.35), transparent 60%), radial-gradient(800px 500px at 8% 100%, rgba(255,127,10,0.16), transparent 60%), linear-gradient(180deg, #04132E 0%, #071E45 100%)",
+        // Céu nocturno: nebulosas suaves (sem filtros de desfocagem, que criavam "caixas" visíveis).
+        "hero-sky":
+          "radial-gradient(900px 620px at 74% 38%, rgba(0,152,220,0.30), transparent 65%), radial-gradient(700px 520px at 92% 88%, rgba(255,127,10,0.13), transparent 62%), radial-gradient(800px 520px at 4% 100%, rgba(10,42,94,0.9), transparent 70%), linear-gradient(180deg, #020B1D 0%, #04132E 55%, #071E45 100%)",
       },
       boxShadow: {
         card: "0 24px 50px -24px rgba(4, 19, 46, 0.35)",
@@ -114,6 +117,10 @@ const config: Config = {
           from: { transform: "translateX(0)" },
           to: { transform: "translateX(-50%)" },
         },
+        twinkle: {
+          "0%, 100%": { transform: "scale(0.8)", filter: "brightness(0.7)" },
+          "50%": { transform: "scale(1.15)", filter: "brightness(1.4)" },
+        },
         "pulse-ring": {
           "0%": { transform: "scale(0.95)", opacity: "0.7" },
           "70%": { transform: "scale(1.15)", opacity: "0" },
@@ -126,6 +133,7 @@ const config: Config = {
         float: "float 5s ease-in-out infinite",
         marquee: "marquee 40s linear infinite",
         "pulse-ring": "pulse-ring 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        twinkle: "twinkle 4s ease-in-out infinite",
       },
     },
   },

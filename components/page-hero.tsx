@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 
+import { Starfield } from "@/components/starfield";
 import { cn } from "@/lib/utils";
 
 interface PageHeroProps {
@@ -24,8 +25,8 @@ const PIXELS = [
 
 export function PageHero({ eyebrow, title, description, className, children }: PageHeroProps) {
   return (
-    <section className={cn("relative isolate overflow-hidden bg-hero-night py-20 text-white lg:py-28", className)}>
-      <div className="bg-grid-lines pointer-events-none absolute inset-0 -z-10" aria-hidden="true" />
+    <section className={cn("relative isolate overflow-hidden bg-hero-sky py-20 text-white lg:py-28", className)}>
+      <Starfield density="light" className="-z-10" />
       {PIXELS.map((p, i) => (
         <motion.span
           key={i}

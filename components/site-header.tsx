@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { ArrowRight, Menu } from "lucide-react";
+import { ArrowRight, LayoutDashboard, Menu } from "lucide-react";
 
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -65,6 +65,13 @@ export function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-3 lg:flex">
+          <Link
+            href="/admin"
+            className="inline-flex h-10 items-center gap-2 rounded-full border border-white/15 px-4 text-sm font-medium text-white/80 transition-colors hover:border-white/30 hover:bg-white/10 hover:text-white"
+          >
+            <LayoutDashboard className="h-4 w-4" />
+            Área admin
+          </Link>
           <Button variant="accent" size="default" onClick={openContact}>
             Pedir proposta
             <ArrowRight className="h-4 w-4" />
@@ -97,10 +104,20 @@ export function SiteHeader() {
               </Link>
             ))}
           </nav>
-          <Button variant="accent" className="mt-auto w-full" onClick={openContact}>
-            Pedir proposta
-            <ArrowRight className="h-4 w-4" />
-          </Button>
+          <div className="mt-auto space-y-3">
+            <Link
+              href="/admin"
+              onClick={closeMobileNav}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-full border border-white/20 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              Área administrativa
+            </Link>
+            <Button variant="accent" className="w-full" onClick={openContact}>
+              Pedir proposta
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
         </SheetContent>
       </Sheet>
     </header>

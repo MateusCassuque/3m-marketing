@@ -120,7 +120,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         )}
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[360px_1fr]">
+      <div className="mt-6 grid sm:grid-cols-1 gap-6 xl:grid-cols-[360px_1fr]">
         <div className="space-y-6">
         <Section title="Detalhes do pedido">
           <dl className="divide-y divide-border px-6 py-2">
